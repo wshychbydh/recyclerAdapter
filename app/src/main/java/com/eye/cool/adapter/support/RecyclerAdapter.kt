@@ -87,6 +87,11 @@ open class RecyclerAdapter : RecyclerView.Adapter<DataViewHolder<Any>>() {
     this.longClickListener = longClickListener
   }
 
+  open fun clearData() {
+    this.data.clear()
+    doNotifyDataSetChanged()
+  }
+
   open fun appendData(data: List<Any>?) {
     if (!data.isNullOrEmpty()) {
       this.data.addAll(data)

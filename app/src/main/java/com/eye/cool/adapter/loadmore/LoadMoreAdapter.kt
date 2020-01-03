@@ -99,6 +99,7 @@ class LoadMoreAdapter : RecyclerAdapter() {
       override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
         super.onScrollStateChanged(recyclerView, newState)
         if (!loadMoreAble) return
+        if (status == STATUS_LOADING || status == STATUS_NO_DATA) return
         if (itemCount < defaultCount) return
         val layoutManager = recyclerView.layoutManager
         if (layoutManager is androidx.recyclerview.widget.LinearLayoutManager) {
