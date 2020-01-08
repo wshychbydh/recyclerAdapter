@@ -35,6 +35,16 @@
 ```
 报其他类似的重复错误时，添加方式同上。
 
+3、构建RecyclerView的ViewHolder
+```
+   @LayoutId(R.layout.layout_sample) 或 @LayoutName("layout_sample")
+   class YourViewHolder(itemView: View) : DataViewHolder<YourData>(itemView) {
+     override fun updateViewByData(data: YourData) {
+       super.updateViewByData(data)
+       //todo itemView中的数据显示
+     }
+   }
+```
 
 4、构建RecyclerAdapter实例
 ```
