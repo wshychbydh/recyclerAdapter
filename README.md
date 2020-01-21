@@ -75,8 +75,15 @@
     adapter.appendData(data)   //追加数据
 ```
 
-**注**：如果数据未显示出来，请检查是否未为RecyclerView设置LayoutManager
+
+#####   
+
+**Demo地址：(https://github.com/wshychbydh/SampleDemo)**    
     
-#### 联系方式 wshychbydh@gmail.com
+##
+
+###### **欢迎fork，更希望你能贡献commit.** (*￣︶￣)    
+
+###### 联系方式 wshychbydh@gmail.com
 
 [![](https://jitpack.io/v/wshychbydh/recyclerAdapter.svg)](https://jitpack.io/#wshychbydh/recyclerAdapter)
