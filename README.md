@@ -7,6 +7,8 @@
 
 2、支持LinearLayoutManager加载更多
 
+3、支持Paging
+
 #### 使用方法：
 
 1、在root目录的build.gradle目录中添加
