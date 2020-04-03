@@ -25,7 +25,7 @@
 2、在项目的build.gradle中添加依赖
 ```
     dependencies {
-        implementation 'com.github.wshychbydh:recyclerAdapter:1.0.1'
+        implementation 'com.github.wshychbydh:recyclerAdapter:1.0.2'
     }
 ```
 
@@ -50,23 +50,25 @@
 
 4、构建RecyclerAdapter实例
 ```
-    val adapter = RecyclerAdapter()
-    adapter.registerViewHolder(YourData::class.java, YourViewHolder::class.java) //注册一个或多个ViewHolder
+    val adapter = RecyclerAdapter()    //注册一个或多个ViewHolder
+    adapter.registerViewHolder(YourData::class.java, YourViewHolder::class.java)
     recyclerView.adapter = adapter
 ```
 
 5、使用LoadMoreAdapter，仅支持LinearLayoutManager
 ```
-    val adapter = LoadMoreAdapter()
+    val adapter = LoadMoreAdapter()  //注册一个或多个ViewHolder
+    adapter.registerViewHolder(YourData::class.java, YourViewHolder::class.java)
+    adapter.registerViewHolder(Loading::class.java, DefaultLoadingViewHolder::class.java) //加载中 （可选）
+    adapter.registerViewHolder(NoMoreData::class.java, DefaultNoMoreDataViewHolder::class.java) //无更多数据 （可选）
     recyclerView.adapter = adapter
-    adapter.registerViewHolder(YourData::class.java, YourViewHolder::class.java) //注册一个或多个ViewHolder
-    
-    adapter.setDefaultCount(10)                       //默认一次加载的数据数量，当数量不足这个值时任务
+
+    adapter.setDefaultCount(10)                       //默认一次加载的数据数量，当数量不足时认为没有更多数据
     adapter.setLoading(Loading("加载更多中..."))      //加载更多提示，默认@See DefaultLoadingViewHolder
     adapter.setNoData(NoMoreData("没有更多数据"))     //无更多数据提示，默认@See DefaultNoMoreDataViewHolder
     adapter.setLoadMoreListener {
-      //1、加载更多数据
-      //2、adapter.updateData(data)
+      //1、加载更多数据loadData
+      //2、加载数据成功后调用adapter.updateData(data)
     }
 ```
 
@@ -75,8 +77,19 @@
 ```
     adapter.updateData(data)   //刷新数据
     adapter.appendData(data)   //追加数据
+    adapter.removeData(data, false)  //删除数据，当剩余数据为null时是否显示注册的空视图（需注册空视图，否则会报错）
 ```
 
+7、Paging配合StatePageAdapter的使用：
+```
+    recyclerView.layoutManager = WrappedLinearLayoutManager(this) //layoutManager必须用WrappedLinearLayoutManager替代
+
+    adapter.registerStateViewHolder(cls, viewHolder)   //注册状态的ViewHolder
+    adapter.registerDataViewHolder(cls, viewHolder)    //注册数据的ViewHolder
+
+    adapter.submitStatus(status)  //提交状态，如加载中，空显示，异常等
+    adapter.submitList(data)      //提交数据
+```
 
 #####   
 
