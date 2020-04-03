@@ -102,10 +102,12 @@ open class RecyclerAdapter : RecyclerView.Adapter<DataViewHolder<Any>>() {
   /**
    * Removing the data can cause the list to be empty and then display empty
    */
-  open fun removeData(data: Any) {
+  open fun removeData(data: Any, showEmpty: Boolean = false) {
     if (this.data.isNullOrEmpty()) return
     if (this.data.contains(data) && this.data.size == 1) {
-      updateData(Empty())
+      if (showEmpty) {
+        updateData(Empty())
+      }
     } else if (this.data.remove(data)) {
       doNotifyDataSetChanged()
     }
@@ -114,13 +116,15 @@ open class RecyclerAdapter : RecyclerView.Adapter<DataViewHolder<Any>>() {
   /**
    * Removing the data can cause the list to be empty and then display empty
    */
-  open fun removeData(data: List<Any>) {
+  open fun removeData(data: List<Any>, showEmpty: Boolean = false) {
     if (this.data.isNullOrEmpty()) return
     data.forEach {
       this.data.remove(it)
     }
     if (this.data.isNullOrEmpty()) {
-      updateData(Empty())
+      if (showEmpty) {
+        updateData(Empty())
+      }
     } else {
       doNotifyDataSetChanged()
     }

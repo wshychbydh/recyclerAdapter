@@ -6,7 +6,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
 /**
- *Created by ycb on 2020/3/30 0030
+ * Created by ycb on 2020/3/30 0030
+ * Use with the StatePageAdapter
  */
 open class StateLinearLayoutManager : LinearLayoutManager {
 
