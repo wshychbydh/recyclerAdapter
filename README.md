@@ -7,7 +7,7 @@
 
 2、支持LinearLayoutManager加载更多
 
-3、支持OnClickListener, OnCheckedLister, OnLongClickLister, GlobalDataListener(从宿主获取任意数据)
+3、支持OnClickListener, OnCheckedLister, OnLongClickLister, GlobalDataObserver(从宿主获取数据)
 
 4、支持Paging
 
