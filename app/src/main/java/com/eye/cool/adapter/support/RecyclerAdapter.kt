@@ -89,7 +89,7 @@ open class RecyclerAdapter : RecyclerView.Adapter<DataViewHolder<Any>>() {
     this.longClickListener = longClickListener
   }
 
-  fun setGlobalDataListener(globalDataObserver: ((key: Any?) -> Any)?) {
+  fun setGlobalDataObserver(globalDataObserver: ((key: Any?) -> Any)?) {
     this.globalDataObserver = globalDataObserver
   }
 

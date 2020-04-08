@@ -58,7 +58,7 @@
     recyclerView.setOnClickListener()
     recyclerView.setOnCheckedChangeListener()
     recyclerView.setOnLongClickListener()
-    recyclerView.setGlobalDataListener()   //可从宿主获取任意数据
+    recyclerView.setGlobalDataObserver()   //可从宿主获取数据
     
     在ViewHolder绑定事件如：registerClickListener(view) //绑定view的click事件
 
