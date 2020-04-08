@@ -64,6 +64,7 @@
 
     adapter.appendData(data)  //叠加数据 
     adapter.updateData(data)  //更新数据 
+    adapter.notifyItemData(data)  //更新某一栏的数据 
     adapter.clearData()       //清空数据 
     adapter.removeData(data, false)  //删除数据，当剩余数据为null时是否显示注册的空视图（需注册空视图，否则会报错）
 ```

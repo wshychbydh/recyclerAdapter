@@ -173,9 +173,20 @@ open class RecyclerAdapter : RecyclerView.Adapter<DataViewHolder<Any>>() {
     doNotifyDataSetChanged()
   }
 
+  open fun notifyItemData(data: Any) {
+    val position = findDataPosition(data)
+    if (position >= 0) {
+      notifyItemChanged(position)
+    }
+  }
+
   @CallSuper
   open fun doNotifyDataSetChanged() {
     notifyDataSetChanged()
+  }
+
+  open fun findDataPosition(data: Any): Int {
+    return this.data.indexOf(data)
   }
 
   open fun isLastPosition(position: Int): Boolean {
