@@ -19,6 +19,7 @@ open class RecyclerAdapter : RecyclerView.Adapter<DataViewHolder<Any>>() {
   private var clickListener: View.OnClickListener? = null
   private var checkedListener: CompoundButton.OnCheckedChangeListener? = null
   private var longClickListener: View.OnLongClickListener? = null
+  private var globalDataObserver: ((key: Any?) -> Any)? = null
 
   override fun getItemCount(): Int {
     return data.size
@@ -54,6 +55,7 @@ open class RecyclerAdapter : RecyclerView.Adapter<DataViewHolder<Any>>() {
     holder.longClickListener = longClickListener
     holder.checkedListener = checkedListener
     holder.dataSize = data.size
+    holder.globalDataObserver = globalDataObserver
     holder.updateViewByData(data[position])
   }
 
@@ -85,6 +87,10 @@ open class RecyclerAdapter : RecyclerView.Adapter<DataViewHolder<Any>>() {
 
   fun setOnLongClickListener(longClickListener: View.OnLongClickListener) {
     this.longClickListener = longClickListener
+  }
+
+  fun setGlobalDataListener(globalDataObserver: ((key: Any?) -> Any)?) {
+    this.globalDataObserver = globalDataObserver
   }
 
   open fun clearData() {

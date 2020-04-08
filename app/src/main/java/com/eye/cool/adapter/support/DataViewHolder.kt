@@ -15,6 +15,7 @@ abstract class DataViewHolder<D>(itemView: View) : RecyclerView.ViewHolder(itemV
   var clickListener: View.OnClickListener? = null
   var checkedListener: CompoundButton.OnCheckedChangeListener? = null
   var longClickListener: View.OnLongClickListener? = null
+  var globalDataObserver: ((key: Any?) -> Any?)? = null
   var dataSize = 0
 
   protected var data: D? = null

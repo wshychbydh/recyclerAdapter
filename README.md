@@ -7,7 +7,9 @@
 
 2、支持LinearLayoutManager加载更多
 
-3、支持Paging
+3、支持OnClickListener, OnCheckedLister, OnLongClickLister, GlobalDataListener(从宿主获取任意数据获取)
+
+4、支持Paging
 
 #### 使用方法：
 
@@ -21,11 +23,10 @@
     }
 ```
 
-
 2、在项目的build.gradle中添加依赖
 ```
     dependencies {
-        implementation 'com.github.wshychbydh:recyclerAdapter:1.0.2'
+        implementation 'com.github.wshychbydh:recyclerAdapter:1.0.3'
     }
 ```
 
@@ -50,12 +51,22 @@
 
 4、构建RecyclerAdapter实例
 ```
-    val adapter = RecyclerAdapter()    //注册一个或多个ViewHolder
-    adapter.registerViewHolder(YourData::class.java, YourViewHolder::class.java)
+    val adapter = RecyclerAdapter()
+    adapter.registerViewHolder(YourData::class.java, YourViewHolder::class.java)  //注册一个或多个ViewHolder
     recyclerView.adapter = adapter
+
+    recyclerView.setOnClickListener()
+    recyclerView.setOnCheckedChangeListener()
+    recyclerView.setOnLongClickListener()
+    recyclerView.setGlobalDataListener()   //可从宿主获取任意数据
+
+    adapter.appendData()  //叠加数据 
+    adapter.updateData()  //更新数据 
+    adapter.clearData()   //清空数据 
+    adapter.removeData()  //移除数据 
 ```
 
-5、使用LoadMoreAdapter，仅支持LinearLayoutManager
+5、使用LoadMoreAdapter，仅支持LinearLayoutManager (或StatePageAdapter实现自动加载更多)
 ```
     val adapter = LoadMoreAdapter()  //注册一个或多个ViewHolder
     adapter.registerViewHolder(YourData::class.java, YourViewHolder::class.java)
