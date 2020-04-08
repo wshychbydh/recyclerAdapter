@@ -7,7 +7,7 @@
 
 2、支持LinearLayoutManager加载更多
 
-3、支持OnClickListener, OnCheckedLister, OnLongClickLister, GlobalDataListener(从宿主获取任意数据获取)
+3、支持OnClickListener, OnCheckedLister, OnLongClickLister, GlobalDataListener(从宿主获取任意数据)
 
 4、支持Paging
 
@@ -49,7 +49,7 @@
    }
 ```
 
-4、构建RecyclerAdapter实例
+4、构建RecyclerAdapter示例
 ```
     val adapter = RecyclerAdapter()
     adapter.registerViewHolder(YourData::class.java, YourViewHolder::class.java)  //注册一个或多个ViewHolder
@@ -59,11 +59,13 @@
     recyclerView.setOnCheckedChangeListener()
     recyclerView.setOnLongClickListener()
     recyclerView.setGlobalDataListener()   //可从宿主获取任意数据
+    
+    在ViewHolder绑定事件如：registerClickListener(view) //绑定view的click事件
 
-    adapter.appendData()  //叠加数据 
-    adapter.updateData()  //更新数据 
-    adapter.clearData()   //清空数据 
-    adapter.removeData()  //移除数据 
+    adapter.appendData(data)  //叠加数据 
+    adapter.updateData(data)  //更新数据 
+    adapter.clearData()       //清空数据 
+    adapter.removeData(data, false)  //删除数据，当剩余数据为null时是否显示注册的空视图（需注册空视图，否则会报错）
 ```
 
 5、使用LoadMoreAdapter，仅支持LinearLayoutManager (或StatePageAdapter实现自动加载更多)
@@ -83,15 +85,7 @@
     }
 ```
 
-6、添加/刷新数据：
-
-```
-    adapter.updateData(data)   //刷新数据
-    adapter.appendData(data)   //追加数据
-    adapter.removeData(data, false)  //删除数据，当剩余数据为null时是否显示注册的空视图（需注册空视图，否则会报错）
-```
-
-7、Paging配合StatePageAdapter的使用：
+6、Paging配合StatePageAdapter的使用：
 ```
     recyclerView.layoutManager = WrappedLinearLayoutManager(this) //layoutManager必须用WrappedLinearLayoutManager替代
 
