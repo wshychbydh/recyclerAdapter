@@ -1,5 +1,6 @@
 package com.eye.cool.adapter.loadmore
 
+import androidx.annotation.IntDef
 import androidx.recyclerview.widget.RecyclerView
 import com.eye.cool.adapter.support.RecyclerAdapter
 
@@ -15,9 +16,13 @@ class LoadMoreAdapter : RecyclerAdapter() {
     const val STATUS_NO_DATA = 2
   }
 
+  @Retention(AnnotationRetention.RUNTIME)
+  @IntDef(STATUS_DEFAULT, STATUS_LOADING, STATUS_NO_DATA)
+  annotation class Status
+
   private var loadMoreListener: ILoadMoreListener? = null
   private var noMoreData: Any? = NoMoreData()
-  private var loading: Any? = LoadMore()
+  private var loadMore: Any? = LoadMore()
   private var defaultCount = 10
   private var loadMoreAble = false
   private var status = STATUS_LOADING
@@ -28,13 +33,13 @@ class LoadMoreAdapter : RecyclerAdapter() {
   }
 
   override fun doNotifyDataSetChanged() {
-    data.remove(loading)
+    data.remove(loadMore)
     data.remove(noMoreData)
     if (data.size < defaultCount) status = STATUS_DEFAULT
     when (status) {
       STATUS_LOADING -> {
-        if (loading != null) {
-          data.add(loading!!)
+        if (loadMore != null) {
+          data.add(loadMore!!)
         }
       }
       STATUS_NO_DATA -> {
@@ -50,8 +55,8 @@ class LoadMoreAdapter : RecyclerAdapter() {
    * 1.registerViewHolder(YourLoadMore::class.java, YourLoadingViewHolder::class.java)
    * 2.setLoading(YourLoadMore::class.java)
    */
-  fun setLoading(data: Any?) {
-    this.loading = data
+  fun setLoadMore(data: Any?) {
+    this.loadMore = data
   }
 
   /**
@@ -67,6 +72,13 @@ class LoadMoreAdapter : RecyclerAdapter() {
    */
   fun setDefaultCount(defaultCount: Int) {
     this.defaultCount = defaultCount
+  }
+
+  fun setStatus(@Status status: Int = STATUS_DEFAULT) {
+    data.remove(loadMore)
+    data.remove(noMoreData)
+    data.add(status)
+    super.doNotifyDataSetChanged()
   }
 
   override fun updateData(data: List<Any>?) {

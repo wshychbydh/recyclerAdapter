@@ -21,7 +21,7 @@ class DefaultLoadingViewHolder(view: View) : DataViewHolder<LoadMore>(view) {
       itemView.adapterLoadingIv.setImageDrawable(data.drawable)
     }
 
-    val anim = ObjectAnimator.ofFloat(itemView.adapterLoadingTv, "rotation", 0.0f, 359.0f)
+    val anim = ObjectAnimator.ofFloat(itemView.adapterLoadingIv, "rotation", 0.0f, 359.0f)
     anim.repeatCount = -1
     anim.duration = 1000
     anim.interpolator = LinearInterpolator()
