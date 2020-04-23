@@ -17,13 +17,13 @@ class LoadMoreAdapter : RecyclerAdapter() {
 
   private var loadMoreListener: ILoadMoreListener? = null
   private var noMoreData: Any? = NoMoreData()
-  private var loading: Any? = Loading()
+  private var loading: Any? = LoadMore()
   private var defaultCount = 10
   private var loadMoreAble = false
   private var status = STATUS_LOADING
 
   init {
-    registerViewHolder(Loading::class.java, DefaultLoadingViewHolder::class.java)
+    registerViewHolder(LoadMore::class.java, DefaultLoadingViewHolder::class.java)
     registerViewHolder(NoMoreData::class.java, DefaultNoMoreDataViewHolder::class.java)
   }
 
@@ -46,10 +46,18 @@ class LoadMoreAdapter : RecyclerAdapter() {
     super.doNotifyDataSetChanged()
   }
 
+  /**
+   * 1.registerViewHolder(YourLoadMore::class.java, YourLoadingViewHolder::class.java)
+   * 2.setLoading(YourLoadMore::class.java)
+   */
   fun setLoading(data: Any?) {
     this.loading = data
   }
 
+  /**
+   * 1.registerViewHolder(YourNoMoreData::class.java, YourNoMoreDataViewHolder::class.java)
+   * 2.setNoData(YourNoMoreData::class.java)
+   */
   fun setNoData(data: Any?) {
     this.noMoreData = data
   }
@@ -68,6 +76,7 @@ class LoadMoreAdapter : RecyclerAdapter() {
   }
 
   override fun appendData(data: List<Any>?) {
+    status = STATUS_DEFAULT
     if (data != null && data.size < defaultCount) {
       enableLoadMoreData(false)
     } else {

@@ -5,18 +5,23 @@ import android.view.View
 import android.view.animation.LinearInterpolator
 import com.eye.cool.adapter.support.DataViewHolder
 import com.eye.cool.adapter.support.LayoutName
-import kotlinx.android.synthetic.main.adapter_loading_viewholder.view.*
+import kotlinx.android.synthetic.main.adapter_loading_view_holder.view.*
 
 
-@LayoutName("adapter_loading_viewholder")
-class DefaultLoadingViewHolder(view: View) : DataViewHolder<Loading>(view) {
+@LayoutName("adapter_loading_view_holder")
+class DefaultLoadingViewHolder(view: View) : DataViewHolder<LoadMore>(view) {
 
-  override fun updateViewByData(data: Loading) {
+  override fun updateViewByData(data: LoadMore) {
     super.updateViewByData(data)
-    if (!data.data.isNullOrEmpty()) {
-      itemView.tv_loading.text = data.data
+    if (!data.text.isNullOrEmpty()) {
+      itemView.adapterLoadingTv.text = data.text
     }
-    val anim = ObjectAnimator.ofFloat(itemView.iv_loading, "rotation", 0.0f, 359.0f)
+
+    if (data.drawable != null) {
+      itemView.adapterLoadingIv.setImageDrawable(data.drawable)
+    }
+
+    val anim = ObjectAnimator.ofFloat(itemView.adapterLoadingTv, "rotation", 0.0f, 359.0f)
     anim.repeatCount = -1
     anim.duration = 1000
     anim.interpolator = LinearInterpolator()
