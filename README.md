@@ -26,7 +26,7 @@
 2、在项目的build.gradle中添加依赖
 ```
     dependencies {
-        implementation 'com.github.wshychbydh:recyclerAdapter:1.0.7'
+        implementation 'com.github.wshychbydh:recyclerAdapter:1.0.8'
     }
 ```
 

@@ -79,7 +79,9 @@ class LoadMoreAdapter : RecyclerAdapter() {
     this.status = status
     data.remove(loadMore)
     data.remove(noMoreData)
-    data.add(status)
+    if (status != STATUS_DEFAULT) {
+      data.add(status)
+    }
     super.doNotifyDataSetChanged()
   }
 
