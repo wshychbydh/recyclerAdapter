@@ -75,6 +75,8 @@ class LoadMoreAdapter : RecyclerAdapter() {
   }
 
   fun setStatus(@Status status: Int = STATUS_DEFAULT) {
+    if (this.status == status) return
+    this.status = status
     data.remove(loadMore)
     data.remove(noMoreData)
     data.add(status)
