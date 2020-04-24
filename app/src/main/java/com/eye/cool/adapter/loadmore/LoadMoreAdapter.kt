@@ -6,7 +6,7 @@ import com.eye.cool.adapter.support.RecyclerAdapter
 
 /**
  * Only for LinearLayout
- * Created by cool on 18/4/18.
+ * Created by ycb on 18/4/18.
  */
 class LoadMoreAdapter : RecyclerAdapter() {
 
@@ -29,7 +29,7 @@ class LoadMoreAdapter : RecyclerAdapter() {
   private var showStatusAlways = false
 
   init {
-    registerViewHolder(LoadMore::class.java, DefaultLoadingViewHolder::class.java)
+    registerViewHolder(LoadMore::class.java, DefaultLoadMoreViewHolder::class.java)
     registerViewHolder(NoMoreData::class.java, DefaultNoMoreDataViewHolder::class.java)
   }
 
@@ -54,6 +54,9 @@ class LoadMoreAdapter : RecyclerAdapter() {
     super.doNotifyDataSetChanged()
   }
 
+  /**
+   * If the data is less than the maximum, whether the state is displayed，default false
+   */
   fun showStatusAlways(showStatusAlways: Boolean) {
     this.showStatusAlways = showStatusAlways
   }
@@ -61,6 +64,7 @@ class LoadMoreAdapter : RecyclerAdapter() {
   /**
    * 1.registerViewHolder(YourLoadMore::class.java, YourLoadingViewHolder::class.java)
    * 2.setLoading(YourLoadMore::class.java)
+   * 3.If set to null, LoadMore will not be displayed
    */
   fun setLoadMore(data: Any?) {
     this.loadMore = data
@@ -69,6 +73,7 @@ class LoadMoreAdapter : RecyclerAdapter() {
   /**
    * 1.registerViewHolder(YourNoMoreData::class.java, YourNoMoreDataViewHolder::class.java)
    * 2.setNoData(YourNoMoreData::class.java)
+   * 3.If set to null, NoMoreData will not be displayed
    */
   fun setNoData(data: Any?) {
     this.noMoreData = data
@@ -81,7 +86,7 @@ class LoadMoreAdapter : RecyclerAdapter() {
     this.defaultCount = defaultCount
   }
 
-  fun setStatus(@Status status: Int = STATUS_NONE) {
+  fun setStatus(@Status status: Int) {
     if (this.status == status) return
     this.status = status
     data.remove(loadMore)
@@ -128,6 +133,7 @@ class LoadMoreAdapter : RecyclerAdapter() {
   }
 
   fun enableLoadMore(enable: Boolean) {
+    if (loadMoreAble == enable) return
     updateStatus(enable)
     doNotifyDataSetChanged()
   }
@@ -141,7 +147,7 @@ class LoadMoreAdapter : RecyclerAdapter() {
       override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
         super.onScrollStateChanged(recyclerView, newState)
         if (!loadMoreAble) return
-        if (status == STATUS_NO_DATA) return
+        if (status != STATUS_LOAD_MORE) return
         if (itemCount < defaultCount) return
         val layoutManager = recyclerView.layoutManager
         if (layoutManager is androidx.recyclerview.widget.LinearLayoutManager) {

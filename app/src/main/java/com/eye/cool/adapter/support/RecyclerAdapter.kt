@@ -10,7 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import java.util.*
 
 /**
- * Created by cool on 18/6/14.
+ * Created by ycb on 18/6/14.
  */
 open class RecyclerAdapter : RecyclerView.Adapter<DataViewHolder<Any>>() {
 

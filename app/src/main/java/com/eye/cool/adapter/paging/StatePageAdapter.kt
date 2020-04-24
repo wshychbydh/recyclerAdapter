@@ -14,7 +14,7 @@ import com.eye.cool.adapter.support.DataViewHolder
 import com.eye.cool.adapter.support.LayoutId
 
 /**
- *Created by ycb on 2020/3/27 0027
+ * Created by ycb on 2020/3/27 0027
  */
 open class StatePageAdapter<T>(
     @NonNull val diffCallback: DiffUtil.ItemCallback<T> = DefaultCallback()

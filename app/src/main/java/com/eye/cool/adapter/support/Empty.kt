@@ -1,12 +1,11 @@
 package com.eye.cool.adapter.support
 
-import androidx.annotation.DrawableRes
+import android.graphics.drawable.Drawable
 
 /**
- *Created by ycb on 2019/12/19 0019
+ * Created by ycb on 2019/12/19 0019
  */
-open class Empty(
-    @DrawableRes
-    var drawableResId: Int = 0,
+data class Empty(
+    var drawable: Drawable? = null,
     var text: CharSequence? = null
 )

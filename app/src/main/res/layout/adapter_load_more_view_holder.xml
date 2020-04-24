@@ -7,13 +7,13 @@
   android:padding="12dp">
 
   <ImageView
-    android:id="@+id/adapterLoadingIv"
+    android:id="@+id/adapterLoadMoreIv"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:src="@drawable/adapter_common_load_more_ic" />
 
   <TextView
-    android:id="@+id/adapterLoadingTv"
+    android:id="@+id/adapterLoadMoreTv"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_marginStart="12dp"

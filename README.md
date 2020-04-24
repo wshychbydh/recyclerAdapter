@@ -74,7 +74,7 @@
 ```
     val adapter = LoadMoreAdapter()  //注册一个或多个ViewHolder
     adapter.registerViewHolder(YourData::class.java, YourViewHolder::class.java)
-    adapter.registerViewHolder(LoadMore::class.java, DefaultLoadingViewHolder::class.java) //加载中 （可选）
+    adapter.registerViewHolder(LoadMore::class.java, DefaultLoadMoreViewHolder::class.java) //加载更多 （可选）
     adapter.registerViewHolder(NoMoreData::class.java, DefaultNoMoreDataViewHolder::class.java) //无更多数据 （可选）
     recyclerView.adapter = adapter
         
