@@ -26,7 +26,7 @@
 2、在项目的build.gradle中添加依赖
 ```
     dependencies {
-        implementation 'com.github.wshychbydh:recyclerAdapter:1.0.3'
+        implementation 'com.github.wshychbydh:recyclerAdapter:1.0.7'
     }
 ```
 
@@ -58,7 +58,8 @@
     recyclerView.setOnClickListener()
     recyclerView.setOnCheckedChangeListener()
     recyclerView.setOnLongClickListener()
-    recyclerView.setGlobalDataObserver()   //可从宿主获取数据
+
+    recyclerView.setGlobalDataObserver()   //适用于从宿主获取数据等情况
     
     在ViewHolder绑定事件如：registerClickListener(view) //绑定view的click事件
 
@@ -66,23 +67,27 @@
     adapter.updateData(data)  //更新数据 
     adapter.notifyItemData(data)  //更新某一栏的数据 
     adapter.clearData()       //清空数据 
-    adapter.removeData(data, false)  //删除数据，当剩余数据为null时是否显示注册的空视图（需注册空视图，否则会报错）
+    adapter.removeData(data, false)  //删除数据。为时ture，当剩余数据为null时显示注册的空视图（Empty）
 ```
 
 5、使用LoadMoreAdapter，仅支持LinearLayoutManager (或StatePageAdapter实现自动加载更多)
 ```
     val adapter = LoadMoreAdapter()  //注册一个或多个ViewHolder
     adapter.registerViewHolder(YourData::class.java, YourViewHolder::class.java)
-    adapter.registerViewHolder(Loading::class.java, DefaultLoadingViewHolder::class.java) //加载中 （可选）
+    adapter.registerViewHolder(LoadMore::class.java, DefaultLoadingViewHolder::class.java) //加载中 （可选）
     adapter.registerViewHolder(NoMoreData::class.java, DefaultNoMoreDataViewHolder::class.java) //无更多数据 （可选）
     recyclerView.adapter = adapter
-
+        
+    adapter.setStatus()                               //手动指定当前列表状态，仅支持@{STATUS_DEFAULT,STATUS_LOADING,STATUS_NO_DATA}
     adapter.setDefaultCount(10)                       //默认一次加载的数据数量，当数量不足时认为没有更多数据
-    adapter.setLoading(Loading("加载更多中..."))      //加载更多提示，默认@See DefaultLoadingViewHolder
+
+    //替换默认的LoadMore和NoData，需注册如adapter.registerViewHolder(YourLoadMore::class.java, YourLoadMoreViewHolder::class.java)
+    adapter.setLoadMore(LoadMore(drawable=R.drawable.xx,text="加载更多中..."))  //加载更多提示，默认@See DefaultLoadingViewHolder
     adapter.setNoData(NoMoreData("没有更多数据"))     //无更多数据提示，默认@See DefaultNoMoreDataViewHolder
     adapter.setLoadMoreListener {
       //1、加载更多数据loadData
       //2、加载数据成功后调用adapter.updateData(data)
+      //3、加载更多且未获取到数据时，可不调用updateData更新状态，但需调用setStatus重置当前列表状态
     }
 ```
 
@@ -93,7 +98,7 @@
     adapter.registerStateViewHolder(cls, viewHolder)   //注册状态的ViewHolder
     adapter.registerDataViewHolder(cls, viewHolder)    //注册数据的ViewHolder
 
-    adapter.submitStatus(status)  //提交状态，如加载中，空显示，异常等
+    adapter.submitStatus(status)  //提交状态，如加载中，空显示，异常等注册过的状态
     adapter.submitList(data)      //提交数据
 ```
 

@@ -129,7 +129,9 @@ open class RecyclerAdapter : RecyclerView.Adapter<DataViewHolder<Any>>() {
     }
     if (this.data.isNullOrEmpty()) {
       if (showEmpty) {
-        updateData(Empty())
+        if (viewHolder.indexOfKey(Empty::class.java.name.hashCode()) > -1) {
+          updateData(Empty())
+        }
       }
     } else {
       doNotifyDataSetChanged()

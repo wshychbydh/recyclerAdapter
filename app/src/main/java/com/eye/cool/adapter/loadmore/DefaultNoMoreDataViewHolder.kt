@@ -13,5 +13,9 @@ class DefaultNoMoreDataViewHolder(view: View) : DataViewHolder<NoMoreData>(view)
     if (!data.text.isNullOrEmpty()) {
       itemView.noMoreDataTv.text = data.text
     }
+
+    if (data.drawable != null) {
+      itemView.noMoreDataTv.setCompoundDrawables(data.drawable, null, null, null)
+    }
   }
 }

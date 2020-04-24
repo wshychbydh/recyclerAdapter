@@ -33,6 +33,9 @@ open class StatePageAdapter<T>(
   @Volatile
   private var dataCode: Int? = null
 
+  /**
+   * @param status Any status you have registered for
+   */
   fun submitStatus(status: Any) {
     val hasCode = status.javaClass.simpleName.hashCode()
     if (viewHolders.indexOfKey(hasCode) < 0) {
