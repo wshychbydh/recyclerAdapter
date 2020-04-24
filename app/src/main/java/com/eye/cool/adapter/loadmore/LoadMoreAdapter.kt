@@ -86,19 +86,24 @@ class LoadMoreAdapter : RecyclerAdapter() {
     this.status = status
     data.remove(loadMore)
     data.remove(noMoreData)
-    if (status != STATUS_NONE) {
-      data.add(status)
-    }
+    loadMoreAble = status == STATUS_LOAD_MORE
     super.doNotifyDataSetChanged()
   }
 
   override fun updateData(data: List<Any>?) {
-    updateStatus(data?.size ?: 0 >= defaultCount)
+    if (data == null) {
+      updateStatus(false)
+    } else {
+      if (this.data.containsAll(data)) {
+        updateStatus(false)
+      } else {
+        updateStatus(data.size >= defaultCount)
+      }
+    }
     super.updateData(data)
   }
 
   override fun appendData(data: List<Any>?) {
-    status = STATUS_NONE
     if (data != null && data.size < defaultCount) {
       updateStatus(false)
     } else {
