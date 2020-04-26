@@ -24,7 +24,7 @@ class LoadMoreAdapter : RecyclerAdapter() {
   private var noMoreData: Any? = NoMoreData()
   private var loadMore: Any? = LoadMore()
   private var defaultCount = 10
-  private var loadMoreAble = false
+  private var enableLoadMore = false
   private var status = STATUS_LOAD_MORE
   private var showStatusAlways = false
 
@@ -91,36 +91,42 @@ class LoadMoreAdapter : RecyclerAdapter() {
     this.status = status
     data.remove(loadMore)
     data.remove(noMoreData)
-    loadMoreAble = status == STATUS_LOAD_MORE
+    enableLoadMore = status == STATUS_LOAD_MORE
     super.doNotifyDataSetChanged()
   }
 
   override fun updateData(data: List<Any>?) {
-    if (data == null) {
-      updateStatus(false)
-    } else {
-      if (this.data.containsAll(data)) {
-        updateStatus(false)
-      } else {
-        updateStatus(data.size >= defaultCount)
-      }
+    val enableLoadMore = when {
+      data == null -> false
+      this.data.containsAll(data) -> false
+      else -> data.size >= defaultCount
     }
+    updateData(data, enableLoadMore)
+  }
+
+  fun updateData(data: List<Any>?, enableLoadMore: Boolean) {
+    updateStatus(enableLoadMore)
     super.updateData(data)
   }
 
   override fun appendData(data: List<Any>?) {
-    if (data != null && data.size < defaultCount) {
-      updateStatus(false)
-    } else {
-      updateStatus(data?.size ?: 0 >= defaultCount)
+    val enableLoadMore = when {
+      data == null -> false
+      data.size < defaultCount -> false
+      else -> true
     }
+    appendData(data, enableLoadMore)
+  }
+
+  fun appendData(data: List<Any>?, enableLoadMore: Boolean) {
+    updateStatus(enableLoadMore)
     super.appendData(data)
   }
 
-  private fun updateStatus(loadMoreAble: Boolean) {
-    this.loadMoreAble = loadMoreAble
+  private fun updateStatus(enableLoadMore: Boolean) {
+    this.enableLoadMore = enableLoadMore
     status = when {
-      loadMoreAble -> {
+      enableLoadMore -> {
         STATUS_LOAD_MORE
       }
       itemCount >= defaultCount -> {
@@ -133,7 +139,7 @@ class LoadMoreAdapter : RecyclerAdapter() {
   }
 
   fun enableLoadMore(enable: Boolean) {
-    if (loadMoreAble == enable) return
+    if (enableLoadMore == enable) return
     updateStatus(enable)
     doNotifyDataSetChanged()
   }
@@ -146,7 +152,7 @@ class LoadMoreAdapter : RecyclerAdapter() {
     recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
       override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
         super.onScrollStateChanged(recyclerView, newState)
-        if (!loadMoreAble) return
+        if (!enableLoadMore) return
         if (status != STATUS_LOAD_MORE) return
         if (itemCount < defaultCount) return
         val layoutManager = recyclerView.layoutManager
@@ -154,7 +160,7 @@ class LoadMoreAdapter : RecyclerAdapter() {
           //   val lastItemPosition = layoutManager.findLastVisibleItemPosition()
           val lastItemPosition = layoutManager.findLastCompletelyVisibleItemPosition()
           if (newState == RecyclerView.SCROLL_STATE_IDLE && lastItemPosition + 1 == itemCount) {
-            loadMoreAble = false
+            enableLoadMore = false
             loadMoreListener?.onLoadMore()
           }
         }
