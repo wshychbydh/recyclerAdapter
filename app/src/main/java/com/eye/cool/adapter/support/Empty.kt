@@ -7,5 +7,6 @@ import android.graphics.drawable.Drawable
  */
 data class Empty(
     var drawable: Drawable? = null,
-    var text: CharSequence? = null
+    var text: CharSequence? = null,
+    var isClickAble: Boolean = false
 )
