@@ -59,8 +59,8 @@ abstract class DataViewHolder<D>(itemView: View) : RecyclerView.ViewHolder(itemV
   fun <T> registerClickListener(view: View, bindData: T? = null) {
     if (clickListener != null) {
       if (bindData == null) {
-        view.isClickable = false
         view.setOnClickListener(null)
+        view.isClickable = false
       } else {
         view.tag = bindData
         view.setOnClickListener(clickListener)
@@ -109,8 +109,8 @@ abstract class DataViewHolder<D>(itemView: View) : RecyclerView.ViewHolder(itemV
   fun <T> registerLongClickListener(view: View, bindData: T? = null) {
     if (longClickListener != null) {
       if (bindData == null) {
-        view.isLongClickable = false
         view.setOnLongClickListener(null)
+        view.isLongClickable = false
       } else {
         view.tag = bindData
         view.setOnLongClickListener(longClickListener)
