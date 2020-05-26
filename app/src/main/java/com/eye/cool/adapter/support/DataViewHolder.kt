@@ -36,6 +36,15 @@ abstract class DataViewHolder<D>(itemView: View) : RecyclerView.ViewHolder(itemV
 
   /**
    * bind with data
+   * @param view the view to setOnClickListener
+   * @param clickAble if false removeOnClickListener
+   */
+  fun registerClickListener(view: View, clickAble: Boolean) {
+    registerClickListener(view, if (clickAble) data else null)
+  }
+
+  /**
+   * bind with data
    */
   fun registerClickListener(view: View) {
     registerClickListener(view, data)
@@ -45,17 +54,22 @@ abstract class DataViewHolder<D>(itemView: View) : RecyclerView.ViewHolder(itemV
    * bind with special data
    *
    * @param view the view to setOnClickListener
-   * @param specialData the data to be bind as view.tag , if is null, the view will remove click listener
+   * @param bindData the data to be bind as view.tag , if is null, the view will remove click listener
    */
-  fun <T> registerClickListener(view: View, specialData: T? = null) {
+  fun <T> registerClickListener(view: View, bindData: T? = null) {
     if (clickListener != null) {
-      if (specialData == null) {
+      if (bindData == null) {
+        view.isClickable = false
         view.setOnClickListener(null)
       } else {
-        view.tag = specialData
+        view.tag = bindData
         view.setOnClickListener(clickListener)
       }
     }
+  }
+
+  fun registerCheckedListener(view: CompoundButton, checkable: Boolean) {
+    registerCheckedListener(view, if (checkable) data else null)
   }
 
   fun registerCheckedListener(view: CompoundButton) {
@@ -66,17 +80,21 @@ abstract class DataViewHolder<D>(itemView: View) : RecyclerView.ViewHolder(itemV
    * bind with special data
    *
    * @param view the view to setOnCheckedChangeListener
-   * @param specialData the data to be bind as view.tag , if is null, the view will remove checked listener
+   * @param bindData the data to be bind as view.tag , if is null, the view will remove checked listener
    */
-  fun <T> registerCheckedListener(view: CompoundButton, specialData: T? = null) {
+  fun <T> registerCheckedListener(view: CompoundButton, bindData: T? = null) {
     if (checkedListener != null) {
-      if (specialData == null) {
+      if (bindData == null) {
         view.setOnCheckedChangeListener(null)
       } else {
-        view.tag = specialData
+        view.tag = bindData
         view.setOnCheckedChangeListener(checkedListener)
       }
     }
+  }
+
+  fun registerLongClickListener(view: View, longClickAble: Boolean) {
+    registerLongClickListener(view, if (longClickAble) data else null)
   }
 
   fun registerLongClickListener(view: View) {
@@ -86,14 +104,15 @@ abstract class DataViewHolder<D>(itemView: View) : RecyclerView.ViewHolder(itemV
   /**
    * bind with special data
    * @param view the view to setOnLongClickListener
-   * @param specialData the data to be bind as view.tag , if is null, the view will remove long click listener
+   * @param bindData the data to be bind as view.tag , if is null, the view will remove long click listener
    */
-  fun <T> registerLongClickListener(view: View, specialData: T? = null) {
+  fun <T> registerLongClickListener(view: View, bindData: T? = null) {
     if (longClickListener != null) {
-      if (specialData == null) {
+      if (bindData == null) {
+        view.isLongClickable = false
         view.setOnLongClickListener(null)
       } else {
-        view.tag = specialData
+        view.tag = bindData
         view.setOnLongClickListener(longClickListener)
       }
     }
