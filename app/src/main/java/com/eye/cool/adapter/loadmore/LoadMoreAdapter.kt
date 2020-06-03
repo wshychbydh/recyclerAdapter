@@ -1,14 +1,21 @@
 package com.eye.cool.adapter.loadmore
 
+import android.view.View
+import android.widget.CompoundButton
 import androidx.annotation.IntDef
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.eye.cool.adapter.support.DataViewHolder
 import com.eye.cool.adapter.support.RecyclerAdapter
 
 /**
  * Only for LinearLayout
  * Created by ycb on 18/4/18.
  */
-class LoadMoreAdapter : RecyclerAdapter() {
+class LoadMoreAdapter : RecyclerAdapter {
+
+  @Deprecated("Use build instead.")
+  constructor()
 
   companion object {
     const val STATUS_NONE = 0
@@ -57,6 +64,7 @@ class LoadMoreAdapter : RecyclerAdapter() {
   /**
    * If the data is less than the maximum, whether the state is displayed，default false
    */
+  @Deprecated("Use build instead.")
   fun showStatusAlways(showStatusAlways: Boolean) {
     this.showStatusAlways = showStatusAlways
   }
@@ -66,6 +74,7 @@ class LoadMoreAdapter : RecyclerAdapter() {
    * 2.setLoading(YourLoadMore::class.java)
    * 3.If set to null, LoadMore will not be displayed
    */
+  @Deprecated("Use build instead.")
   fun setLoadMore(data: Any?) {
     this.loadMore = data
   }
@@ -75,6 +84,7 @@ class LoadMoreAdapter : RecyclerAdapter() {
    * 2.setNoData(YourNoMoreData::class.java)
    * 3.If set to null, NoMoreData will not be displayed
    */
+  @Deprecated("Use build instead.")
   fun setNoData(data: Any?) {
     this.noMoreData = data
   }
@@ -82,6 +92,7 @@ class LoadMoreAdapter : RecyclerAdapter() {
   /**
    * Maximum data per request
    */
+  @Deprecated("Use build instead.")
   fun setDefaultCount(defaultCount: Int) {
     this.defaultCount = defaultCount
   }
@@ -144,10 +155,12 @@ class LoadMoreAdapter : RecyclerAdapter() {
     doNotifyDataSetChanged()
   }
 
+  @Deprecated("Use build instead.")
   fun setLoadMoreListener(listener: ILoadMoreListener) {
     this.loadMoreListener = listener
   }
 
+  @Deprecated("Use build instead.")
   fun empowerLoadMoreAbility(recyclerView: RecyclerView) {
     recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
       override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
@@ -166,5 +179,103 @@ class LoadMoreAdapter : RecyclerAdapter() {
         }
       }
     })
+  }
+
+  class Builder(recyclerView: RecyclerView) {
+
+    private val adapter = LoadMoreAdapter()
+
+    init {
+      recyclerView.layoutManager = LinearLayoutManager(recyclerView.context)
+      adapter.empowerLoadMoreAbility(recyclerView)
+      recyclerView.adapter = adapter
+    }
+
+    /**
+     * If the data is less than the maximum, whether the state is displayed，default false
+     */
+    fun showStatusAlways(showStatusAlways: Boolean): Builder {
+      adapter.showStatusAlways = showStatusAlways
+      return this
+    }
+
+    /**
+     * 1.registerViewHolder(YourLoadMore::class.java, YourLoadingViewHolder::class.java)
+     * 2.setLoading(YourLoadMore::class.java)
+     * 3.If set to null, LoadMore will not be displayed
+     */
+    fun setLoadMore(data: Any?): Builder {
+      adapter.loadMore = data
+      return this
+    }
+
+    /**
+     * 1.registerViewHolder(YourNoMoreData::class.java, YourNoMoreDataViewHolder::class.java)
+     * 2.setNoData(YourNoMoreData::class.java)
+     * 3.If set to null, NoMoreData will not be displayed
+     */
+    fun setNoData(data: Any?): Builder {
+      adapter.noMoreData = data
+      return this
+    }
+
+    /**
+     * Maximum data per request
+     */
+    fun setDefaultCount(defaultCount: Int): Builder {
+      adapter.defaultCount = defaultCount
+      return this
+    }
+
+    /**
+     * Load more listener
+     */
+    fun setLoadMoreListener(listener: ILoadMoreListener): Builder {
+      adapter.loadMoreListener = listener
+      return this
+    }
+
+    /**
+     * Register ViewHolder by dataClass, data is exclusive.
+     *
+     * @param dataClazz data Class
+     * @param clazz     ViewHolder Class
+     */
+    fun registerViewHolder(dataClazz: Class<*>, clazz: Class<out DataViewHolder<*>>): Builder {
+      adapter.registerViewHolder(dataClazz, clazz)
+      return this
+    }
+
+    /**
+     * Register a callback to be invoked when this view is clicked. If this view is not
+     * clickable, it becomes clickable.
+     *
+     * @param clickListener The callback that will run
+     *
+     * @see #setClickable(boolean)
+     */
+    fun setOnClickListener(clickListener: View.OnClickListener): Builder {
+      adapter.setOnClickListener(clickListener)
+      return this
+    }
+
+    fun setOnCheckedChangeListener(checkedListener: CompoundButton.OnCheckedChangeListener): Builder {
+      adapter.setOnCheckedChangeListener(checkedListener)
+      return this
+    }
+
+    fun setOnLongClickListener(longClickListener: View.OnLongClickListener): Builder {
+      adapter.setOnLongClickListener(longClickListener)
+      return this
+    }
+
+    fun setGlobalDataObserver(globalDataObserver: ((key: Any?) -> Any)?): Builder {
+      adapter.setGlobalDataObserver(globalDataObserver)
+      return this
+    }
+
+    fun build(): LoadMoreAdapter {
+      return adapter
+    }
   }
 }

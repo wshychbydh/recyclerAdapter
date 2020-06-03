@@ -26,7 +26,7 @@
 2、在项目的build.gradle中添加依赖
 ```
     dependencies {
-        implementation 'com.github.wshychbydh:recyclerAdapter:1.1.4'
+        implementation 'com.github.wshychbydh:recyclerAdapter:1.1.5'
     }
 ```
 
@@ -72,23 +72,42 @@
 
 5、使用LoadMoreAdapter，仅支持LinearLayoutManager (或StatePageAdapter实现自动加载更多)
 ```
-    val adapter = LoadMoreAdapter()  //注册一个或多个ViewHolder
-    adapter.registerViewHolder(YourData::class.java, YourViewHolder::class.java)
-    adapter.registerViewHolder(LoadMore::class.java, DefaultLoadMoreViewHolder::class.java) //加载更多 （可选）
-    adapter.registerViewHolder(NoMoreData::class.java, DefaultNoMoreDataViewHolder::class.java) //无更多数据 （可选）
-    recyclerView.adapter = adapter
-        
-    adapter.setStatus()                               //手动指定当前列表状态，仅支持@{STATUS_DEFAULT,STATUS_LOADING,STATUS_NO_DATA}
-    adapter.setDefaultCount(10)                       //默认一次加载的数据数量，当数量不足时认为没有更多数据
+    LoadMoreAdapter.Builder(recyclerView)    //绑定recyclerview和adapter并开启加载更多
 
-    //替换默认的LoadMore和NoData，需注册如adapter.registerViewHolder(YourLoadMore::class.java, YourLoadMoreViewHolder::class.java)
-    adapter.setLoadMore(LoadMore(drawable=R.drawable.xx,text="加载更多中..."))  //加载更多提示，默认@See DefaultLoadingViewHolder
-    adapter.setNoData(NoMoreData("没有更多数据"))     //无更多数据提示，默认@See DefaultNoMoreDataViewHolder
-    adapter.setLoadMoreListener {
-      //1、加载更多数据loadData
-      //2、加载数据成功后调用adapter.updateData(data)
-      //3、加载更多且未获取到数据时，可不调用updateData更新状态，但需调用setStatus重置当前列表状态
-    }
+        .setDefaultCount(10)                 //默认一次加载的数据数量，当数量不足时认为没有更多数据（可选）
+
+         //替换默认（DefaultLoadingViewHolder）的LoadMore，需注册对应的ViewHolder
+        .setLoadMore(LoadMore(drawable=R.drawable.xx,text="加载更多中..."))  //加载更多提示（可选）
+
+         //替换默认（DefaultNoMoreDataViewHolder）的NoData，需注册对应的ViewHolder
+        .setNoData(NoMoreData("没有更多数据"))   //无更多数据提示（可选）
+
+        //注册ViewHolder
+        .registerViewHolder(YourData::class.java, YourViewHolder::class.java)
+        .registerViewHolder(LoadMore::class.java, DefaultLoadMoreViewHolder::class.java) //加载更多 （可选）
+        .registerViewHolder(NoMoreData::class.java, DefaultNoMoreDataViewHolder::class.java) //无更多数据 （可选）
+
+        .setLoadMoreListener {
+              //1、加载更多数据loadData
+              //2、加载数据成功后调用adapter.updateData(data)
+              //3、加载更多且未获取到数据时，可不调用updateData更新状态，但需调用setStatus重置当前列表状态
+        }
+
+        //绑定事件
+        .setOnClickListener()           //（可选）
+        .setOnLongClickListener()       //（可选）
+        .setOnCheckedChangeListener()   //（可选）
+
+        //设置数据使得ViewHolder可访问
+        .setGlobalDataObserver {  }     //（可选）
+
+        .build()
+
+    //仅支持@{STATUS_DEFAULT,STATUS_LOADING,STATUS_NO_DATA}
+    adapter.setStatus()       //指定当前列表状态， （可选）
+
+    adapter.updateData(data)  //更新数据
+
 ```
 
 6、Paging配合StatePageAdapter的使用：
