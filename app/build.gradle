@@ -8,6 +8,7 @@ group = 'com.github.wshychbydh'
 
 android {
     compileSdkVersion 29
+    buildToolsVersion "29.0.2"
     resourcePrefix 'adapter_'
     defaultConfig {
         minSdkVersion 14
