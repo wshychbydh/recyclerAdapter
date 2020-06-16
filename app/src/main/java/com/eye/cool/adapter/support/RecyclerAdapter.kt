@@ -21,6 +21,8 @@ open class RecyclerAdapter : RecyclerView.Adapter<DataViewHolder<Any>>() {
   private var longClickListener: View.OnLongClickListener? = null
   private var globalDataObserver: ((key: Any?) -> Any)? = null
 
+  private var inflater: LayoutInflater? = null
+
   override fun getItemCount(): Int {
     return data.size
   }
@@ -33,6 +35,7 @@ open class RecyclerAdapter : RecyclerView.Adapter<DataViewHolder<Any>>() {
     val clazz = viewHolder.get(viewType)
         ?: throw IllegalArgumentException("You should call registerViewHolder() first!")
     var layoutId = clazz.getAnnotation(LayoutId::class.java)?.value
+
     if (layoutId == null || layoutId == 0) {
       val layoutName = clazz.getAnnotation(LayoutName::class.java)?.value
       if (!layoutName.isNullOrEmpty()) {
@@ -42,8 +45,12 @@ open class RecyclerAdapter : RecyclerView.Adapter<DataViewHolder<Any>>() {
 
     require(!(layoutId == null || layoutId == 0)) { clazz.simpleName + " must be has @LayoutId or @LayoutName annotation" }
 
+    if (inflater == null) {
+      inflater = LayoutInflater.from(parent.context.applicationContext)
+    }
+
     try {
-      val itemView = LayoutInflater.from(parent.context).inflate(layoutId, parent, false)
+      val itemView = inflater!!.inflate(layoutId, parent, false)
       return clazz.getConstructor(View::class.java).newInstance(itemView) as DataViewHolder<Any>
     } catch (e: Exception) {
       throw RuntimeException(e)

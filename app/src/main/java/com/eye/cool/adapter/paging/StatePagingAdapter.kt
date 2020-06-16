@@ -12,11 +12,15 @@ import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import com.eye.cool.adapter.support.DataViewHolder
 import com.eye.cool.adapter.support.LayoutId
+import com.eye.cool.adapter.support.LayoutName
 
 /**
+ *
+ * If status is displayed, it is displayed in full screen, without data.
+ *
  * Created by ycb on 2020/3/27 0027
  */
-open class StatePageAdapter<T>(
+open class StatePagingAdapter<T>(
     @NonNull val diffCallback: DiffUtil.ItemCallback<T> = DefaultCallback()
 ) : PagedListAdapter<T, DataViewHolder<Any>>(diffCallback) {
 
@@ -68,6 +72,13 @@ open class StatePageAdapter<T>(
     val clazz = viewHolders.get(viewType)
         ?: throw IllegalArgumentException("You should call registerViewHolder() first !")
     var layoutId = clazz.getAnnotation(LayoutId::class.java)?.value
+
+    if (layoutId == null || layoutId == 0) {
+      val layoutName = clazz.getAnnotation(LayoutName::class.java)?.value
+      if (!layoutName.isNullOrEmpty()) {
+        layoutId = parent.resources.getIdentifier(layoutName, "layout", parent.context.packageName)
+      }
+    }
 
     require(!(layoutId == null || layoutId == 0)) { clazz.simpleName + " must be has annotation of @LayoutId or @LayoutName" }
 
@@ -136,7 +147,9 @@ open class StatePageAdapter<T>(
     val hashCode = cls.simpleName.hashCode()
     if (isDataHolder) {
       if (this.dataCode != null) {
-        throw IllegalStateException("A data's ViewHolder already exists")
+        if (dataCode != hashCode) {
+          throw IllegalStateException("The data's ViewHolder is already exists")
+        }
       } else {
         this.dataCode = hashCode
       }
