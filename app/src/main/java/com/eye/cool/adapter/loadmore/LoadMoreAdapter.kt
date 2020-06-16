@@ -34,7 +34,7 @@ class LoadMoreAdapter : RecyclerAdapter {
   private var defaultCount = 10
   private var enableLoadMore = false
   private var status = STATUS_LOAD_MORE
-  private var showStatusAlways = false
+  private var showNoMoreStatusAlways = false
   private var showLoadMore = true
   private var showNoMoreData = true
   private var recyclerView: RecyclerView? = null
@@ -59,7 +59,7 @@ class LoadMoreAdapter : RecyclerAdapter {
   override fun doNotifyDataSetChanged() {
     data.remove(loadMore)
     data.remove(noMoreData)
-    if (!showStatusAlways && data.size < defaultCount) {
+    if (!showNoMoreStatusAlways && data.size < defaultCount) {
       status = STATUS_NONE
     }
     when (status) {
@@ -80,9 +80,9 @@ class LoadMoreAdapter : RecyclerAdapter {
   /**
    * If the data is less than the maximum, whether the state is displayed，default false
    */
-  @Deprecated("Use build instead.")
+  @Deprecated("Use builder's showNoMoreData() instead.")
   fun showStatusAlways(showStatusAlways: Boolean) {
-    this.showStatusAlways = showStatusAlways
+    this.showNoMoreStatusAlways = showStatusAlways
   }
 
   /**
@@ -236,16 +236,6 @@ class LoadMoreAdapter : RecyclerAdapter {
     }
 
     /**
-     * If the data is less than the maximum, whether the state is displayed.
-     *
-     * @param showStatusAlways default false
-     */
-    fun showStatusAlways(showStatusAlways: Boolean): Builder {
-      adapter.showStatusAlways = showStatusAlways
-      return this
-    }
-
-    /**
      * 1.registerViewHolder(YourLoadMore::class.java, YourLoadingViewHolder::class.java)
      * 2.setLoading(YourLoadMore::class.java)
      * 3.If set to null, LoadMore will not be displayed
@@ -353,9 +343,12 @@ class LoadMoreAdapter : RecyclerAdapter {
      * Display the appropriate view when no more data is available
      *
      * @param showNoMoreData default true
+     * @param showAlways If the data is less than the maximum,
+     * whether the no more data state is displayed, default false
      */
-    fun showNoMoreData(showNoMoreData: Boolean): Builder {
+    fun showNoMoreData(showNoMoreData: Boolean, showAlways: Boolean = false): Builder {
       adapter.showNoMoreData = showNoMoreData
+      adapter.showNoMoreStatusAlways = showAlways
       return this
     }
 

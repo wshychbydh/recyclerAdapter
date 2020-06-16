@@ -26,7 +26,7 @@
 2、在项目的build.gradle中添加依赖
 ```
     dependencies {
-        implementation 'com.github.wshychbydh:recyclerAdapter:1.1.5'
+        implementation 'com.github.wshychbydh:recyclerAdapter:1.1.6'
     }
 ```
 
@@ -81,6 +81,10 @@
 
          //替换默认（DefaultNoMoreDataViewHolder）的NoData，需注册对应的ViewHolder
         .setNoData(NoMoreData("没有更多数据"))   //无更多数据提示（可选）
+
+        .showStatusAlways(Boolean)          //数据量小于PageSize时，是否显示没有更多数据view，默认false
+        .showLoadMore(Boolean)              //显示加载更多view，默认true
+        .showNoMoreData(Boolean)            //显示没有更多数据view，默认true
 
         //注册ViewHolder
         .registerViewHolder(YourData::class.java, YourViewHolder::class.java)
