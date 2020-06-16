@@ -9,7 +9,8 @@ import com.eye.cool.adapter.support.DataViewHolder
 import com.eye.cool.adapter.support.RecyclerAdapter
 
 /**
- * Only for LinearLayout
+ * Support for RecyclerView.LinearLayoutManager
+ *
  * Created by ycb on 18/4/18.
  */
 class LoadMoreAdapter : RecyclerAdapter {
@@ -20,11 +21,11 @@ class LoadMoreAdapter : RecyclerAdapter {
   companion object {
     const val STATUS_NONE = 0
     const val STATUS_LOAD_MORE = 1
-    const val STATUS_NO_DATA = 2
+    const val STATUS_NO_MORE_DATA = 2
   }
 
   @Retention(AnnotationRetention.RUNTIME)
-  @IntDef(STATUS_NONE, STATUS_LOAD_MORE, STATUS_NO_DATA)
+  @IntDef(STATUS_NONE, STATUS_LOAD_MORE, STATUS_NO_MORE_DATA)
   annotation class Status
 
   private var loadMoreListener: ILoadMoreListener? = null
@@ -34,10 +35,25 @@ class LoadMoreAdapter : RecyclerAdapter {
   private var enableLoadMore = false
   private var status = STATUS_LOAD_MORE
   private var showStatusAlways = false
+  private var showLoadMore = true
+  private var showNoMoreData = true
+  private var recyclerView: RecyclerView? = null
 
   init {
     registerViewHolder(LoadMore::class.java, DefaultLoadMoreViewHolder::class.java)
     registerViewHolder(NoMoreData::class.java, DefaultNoMoreDataViewHolder::class.java)
+    registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
+      override fun onChanged() {
+        if (enableLoadMore) {
+          recyclerView?.postDelayed({
+            if (isNeedAutoLoadMore()) { //All the data doesn't fill the screen
+              enableLoadMore = false
+              loadMoreListener?.onLoadMore()
+            }
+          }, 100L)
+        }
+      }
+    })
   }
 
   override fun doNotifyDataSetChanged() {
@@ -48,12 +64,12 @@ class LoadMoreAdapter : RecyclerAdapter {
     }
     when (status) {
       STATUS_LOAD_MORE -> {
-        if (loadMore != null) {
+        if (loadMore != null && showLoadMore) {
           data.add(loadMore!!)
         }
       }
-      STATUS_NO_DATA -> {
-        if (noMoreData != null) {
+      STATUS_NO_MORE_DATA -> {
+        if (noMoreData != null && showNoMoreData) {
           data.add(noMoreData!!)
         }
       }
@@ -97,13 +113,19 @@ class LoadMoreAdapter : RecyclerAdapter {
     this.defaultCount = defaultCount
   }
 
-  fun setStatus(@Status status: Int) {
+  @Deprecated("Use A and B to automatically determine the status")
+  fun updateStatus(@Status status: Int) {
     if (this.status == status) return
     this.status = status
     data.remove(loadMore)
     data.remove(noMoreData)
     enableLoadMore = status == STATUS_LOAD_MORE
     super.doNotifyDataSetChanged()
+  }
+
+  @Deprecated("Use updateStatus instead.", ReplaceWith("updateStatus(status)"))
+  fun setStatus(@Status status: Int) {
+    updateStatus(status)
   }
 
   override fun updateData(data: List<Any>?) {
@@ -141,7 +163,7 @@ class LoadMoreAdapter : RecyclerAdapter {
         STATUS_LOAD_MORE
       }
       itemCount >= defaultCount -> {
-        STATUS_NO_DATA
+        STATUS_NO_MORE_DATA
       }
       else -> {
         STATUS_NONE
@@ -162,24 +184,45 @@ class LoadMoreAdapter : RecyclerAdapter {
 
   @Deprecated("Use build instead.")
   fun empowerLoadMoreAbility(recyclerView: RecyclerView) {
-    recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-      override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-        super.onScrollStateChanged(recyclerView, newState)
-        if (!enableLoadMore) return
-        if (status != STATUS_LOAD_MORE) return
-        if (itemCount < defaultCount) return
-        val layoutManager = recyclerView.layoutManager
-        if (layoutManager is androidx.recyclerview.widget.LinearLayoutManager) {
-          //   val lastItemPosition = layoutManager.findLastVisibleItemPosition()
-          val lastItemPosition = layoutManager.findLastCompletelyVisibleItemPosition()
-          if (newState == RecyclerView.SCROLL_STATE_IDLE && lastItemPosition + 1 == itemCount) {
-            enableLoadMore = false
-            loadMoreListener?.onLoadMore()
-          }
+    this.recyclerView = recyclerView
+    empowerLoadMoreAbility(true)
+  }
+
+  private fun empowerLoadMoreAbility(enable: Boolean) {
+    val rv = this.recyclerView ?: return
+    rv.removeOnScrollListener(scrollListener)
+    if (enable) {
+      rv.addOnScrollListener(scrollListener)
+    }
+  }
+
+  private fun isNeedAutoLoadMore(): Boolean {
+    if (itemCount < defaultCount) return false
+    val rv = this.recyclerView ?: return false
+    val lm = rv.layoutManager as? LinearLayoutManager ?: return false
+    val firstPosition = lm.findFirstVisibleItemPosition()
+    val lastPosition = lm.findLastCompletelyVisibleItemPosition()
+    return firstPosition == 0 && lastPosition + 1 == itemCount
+  }
+
+  private val scrollListener = object : RecyclerView.OnScrollListener() {
+    override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+      super.onScrollStateChanged(recyclerView, newState)
+      if (!enableLoadMore) return
+      if (status != STATUS_LOAD_MORE) return
+      if (itemCount < defaultCount) return
+      val layoutManager = recyclerView.layoutManager
+      if (layoutManager is LinearLayoutManager) {
+        //   val lastItemPosition = layoutManager.findLastVisibleItemPosition()
+        val lastItemPosition = layoutManager.findLastCompletelyVisibleItemPosition()
+        if (newState == RecyclerView.SCROLL_STATE_IDLE && lastItemPosition + 1 == itemCount) {
+          enableLoadMore = false
+          loadMoreListener?.onLoadMore()
         }
       }
-    })
+    }
   }
+
 
   class Builder(recyclerView: RecyclerView) {
 
@@ -187,12 +230,15 @@ class LoadMoreAdapter : RecyclerAdapter {
 
     init {
       recyclerView.layoutManager = LinearLayoutManager(recyclerView.context)
-      adapter.empowerLoadMoreAbility(recyclerView)
       recyclerView.adapter = adapter
+      adapter.recyclerView = recyclerView
+      adapter.empowerLoadMoreAbility(true)
     }
 
     /**
-     * If the data is less than the maximum, whether the state is displayed，default false
+     * If the data is less than the maximum, whether the state is displayed.
+     *
+     * @param showStatusAlways default false
      */
     fun showStatusAlways(showStatusAlways: Boolean): Builder {
       adapter.showStatusAlways = showStatusAlways
@@ -203,6 +249,8 @@ class LoadMoreAdapter : RecyclerAdapter {
      * 1.registerViewHolder(YourLoadMore::class.java, YourLoadingViewHolder::class.java)
      * 2.setLoading(YourLoadMore::class.java)
      * 3.If set to null, LoadMore will not be displayed
+     *
+     * @param data Any data model associated with ViewHolder
      */
     fun setLoadMore(data: Any?): Builder {
       adapter.loadMore = data
@@ -213,6 +261,8 @@ class LoadMoreAdapter : RecyclerAdapter {
      * 1.registerViewHolder(YourNoMoreData::class.java, YourNoMoreDataViewHolder::class.java)
      * 2.setNoData(YourNoMoreData::class.java)
      * 3.If set to null, NoMoreData will not be displayed
+     *
+     * @param data Any data model associated with ViewHolder
      */
     fun setNoData(data: Any?): Builder {
       adapter.noMoreData = data
@@ -221,6 +271,7 @@ class LoadMoreAdapter : RecyclerAdapter {
 
     /**
      * Maximum data per request
+     * @param defaultCount default 10
      */
     fun setDefaultCount(defaultCount: Int): Builder {
       adapter.defaultCount = defaultCount
@@ -229,6 +280,8 @@ class LoadMoreAdapter : RecyclerAdapter {
 
     /**
      * Load more listener
+     *
+     * @param listener
      */
     fun setLoadMoreListener(listener: ILoadMoreListener): Builder {
       adapter.loadMoreListener = listener
@@ -238,7 +291,7 @@ class LoadMoreAdapter : RecyclerAdapter {
     /**
      * Register ViewHolder by dataClass, data is exclusive.
      *
-     * @param dataClazz data Class
+     * @param dataClazz Data Class
      * @param clazz     ViewHolder Class
      */
     fun registerViewHolder(dataClazz: Class<*>, clazz: Class<out DataViewHolder<*>>): Builder {
@@ -247,30 +300,62 @@ class LoadMoreAdapter : RecyclerAdapter {
     }
 
     /**
-     * Register a callback to be invoked when this view is clicked. If this view is not
-     * clickable, it becomes clickable.
+     * {@link View.OnClickListener}
      *
-     * @param clickListener The callback that will run
-     *
-     * @see #setClickable(boolean)
+     * @param clickListener
      */
     fun setOnClickListener(clickListener: View.OnClickListener): Builder {
       adapter.setOnClickListener(clickListener)
       return this
     }
 
+    /**
+     * {@link CompoundButton.setOnCheckedChangeListener}
+     *
+     * @param checkedListener
+     */
     fun setOnCheckedChangeListener(checkedListener: CompoundButton.OnCheckedChangeListener): Builder {
       adapter.setOnCheckedChangeListener(checkedListener)
       return this
     }
 
+    /**
+     * {@link View.OnLongClickListener}
+     *
+     * @param longClickListener
+     */
     fun setOnLongClickListener(longClickListener: View.OnLongClickListener): Builder {
       adapter.setOnLongClickListener(longClickListener)
       return this
     }
 
+    /**
+     * Share value to ViewHolder by key
+     *
+     * @param globalDataObserver
+     */
     fun setGlobalDataObserver(globalDataObserver: ((key: Any?) -> Any)?): Builder {
       adapter.setGlobalDataObserver(globalDataObserver)
+      return this
+    }
+
+    /**
+     * Display load more view
+     *
+     * @param showLoadMore default true
+     */
+    fun showLoadMore(showLoadMore: Boolean): Builder {
+      adapter.showLoadMore = showLoadMore
+      return this
+    }
+
+    /**
+     * Display the appropriate view when no more data is available
+     *
+     * @param showNoMoreData default true
+     */
+    fun showNoMoreData(showNoMoreData: Boolean): Builder {
+      adapter.showNoMoreData = showNoMoreData
       return this
     }
 
