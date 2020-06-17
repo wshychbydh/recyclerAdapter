@@ -54,15 +54,18 @@
 4、构建RecyclerAdapter示例
 ```
     val adapter = RecyclerAdapter()
-    adapter.registerViewHolder(YourData::class.java, YourViewHolder::class.java)  //注册一个或多个ViewHolder
-    adapter.registerEmptyViewHolder(Empty::class.java, YourEmptyViewHolder::class.java)  //替换默认的空视图 （可选）
+
+    adapter.registerViewHolder(YourData::class.java, YourViewHolder::class.java)   //注册一个或多个ViewHolder
+    adapter.replaceEmptyViewHolder(YourEmpty, YourEmptyViewHolder::class.java)     //替换默认空视图（可选）
+    adapter.replaceLoadingViewHolder(YourLoading, YourEmptyViewHolder::class.java) //替换默认加载视图（可选）
+
     recyclerView.adapter = adapter
 
+    //绑定view的事件，并在ViewHolder注册事件，如：registerClickListener(view)
     recyclerView.setOnClickListener()
     recyclerView.setOnCheckedChangeListener()
     recyclerView.setOnLongClickListener()
     recyclerView.setGlobalDataObserver()   //适用于从宿主获取数据等情况
-    在ViewHolder绑定事件如：registerClickListener(view) //绑定view的click事件
 
     adapter.appendData(data)  //叠加数据 
     adapter.updateData(data)  //更新数据
@@ -80,7 +83,7 @@
 
         //注册ViewHolder
         .registerViewHolder(YourData::class.java, YourViewHolder::class.java)
-        //注册其他任意状态的视图，如Empty，Loading，如下：（可选）
+        //注册其他任意状态的视图，如Empty，Loading等（可选）
         .registerSpecViewHolder(YourStatus::class.java, YourViewHolder::class.java) 
         
         //替换默认空视图（可选）
