@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.CompoundButton
 import androidx.annotation.CallSuper
+import androidx.annotation.UiThread
 import androidx.recyclerview.widget.RecyclerView
 import java.util.*
 
@@ -15,13 +16,20 @@ import java.util.*
 open class RecyclerAdapter : RecyclerView.Adapter<DataViewHolder<Any>>() {
 
   private val viewHolder = SparseArray<Class<out DataViewHolder<*>>>()
-  protected val data = ArrayList<Any>()
   private var clickListener: View.OnClickListener? = null
   private var checkedListener: CompoundButton.OnCheckedChangeListener? = null
   private var longClickListener: View.OnLongClickListener? = null
   private var globalDataObserver: ((key: Any?) -> Any)? = null
-
   private var inflater: LayoutInflater? = null
+
+  protected val data = ArrayList<Any>()
+  protected var empty: Any = Empty()
+  protected var loading: Any = Loading()
+
+  init {
+    registerViewHolder(Loading::class.java, DefaultLoadingViewHolder::class.java)
+    registerViewHolder(Empty::class.java, DefaultEmptyViewHolder::class.java)
+  }
 
   override fun getItemCount(): Int {
     return data.size
@@ -69,11 +77,42 @@ open class RecyclerAdapter : RecyclerView.Adapter<DataViewHolder<Any>>() {
   /**
    * Register ViewHolder by dataClass, data is exclusive.
    *
-   * @param dataClazz data Class
+   * @param dataClazz Data Class
    * @param clazz     ViewHolder Class
    */
   fun registerViewHolder(dataClazz: Class<*>, clazz: Class<out DataViewHolder<*>>) {
     viewHolder.put(dataClazz.name.hashCode(), clazz)
+  }
+
+  /**
+   * Remove registered view holder by class
+   *
+   * @param dataClazz The class's view holder will be removed
+   */
+  fun removeViewHolder(dataClazz: Class<*>) {
+    viewHolder.remove(dataClazz.name.hashCode())
+  }
+
+  /**
+   * Only used to replace empty view, default Empty
+   *
+   * @param empty empty object
+   * @param clazz Empty view holder class
+   */
+  open fun replaceEmptyViewHolder(empty: Any = Empty(), clazz: Class<out DataViewHolder<*>>) {
+    viewHolder.put(empty.javaClass.name.hashCode(), clazz)
+    this.empty = empty
+  }
+
+  /**
+   * Only used to replace loading view, default Loading
+   *
+   * @param loading loading object
+   * @param clazz Loading view holder class
+   */
+  open fun replaceLoadingViewHolder(loading: Any = Loading(), clazz: Class<out DataViewHolder<*>>) {
+    viewHolder.put(loading.javaClass.name.hashCode(), clazz)
+    this.loading = loading
   }
 
   /**
@@ -100,16 +139,43 @@ open class RecyclerAdapter : RecyclerView.Adapter<DataViewHolder<Any>>() {
     this.globalDataObserver = globalDataObserver
   }
 
+  protected fun isEmptyRegistered(): Boolean {
+    return viewHolder.indexOfKey(empty.javaClass.name.hashCode()) > -1
+  }
+
+  open fun loading() {
+    if (viewHolder.indexOfKey(loading.javaClass.name.hashCode()) > -1) {
+      this.data.clear()
+      this.data.add(loading)
+      doNotifyDataSetChanged()
+    }
+  }
+
+  open fun showEmpty() {
+    if (isEmptyRegistered()) {
+      this.data.clear()
+      this.data.add(empty)
+      doNotifyDataSetChanged()
+    }
+  }
+
   open fun clearData() {
+    clearData(true)
+  }
+
+  open fun clearData(showEmpty: Boolean) {
+    if (this.data.isNullOrEmpty()) return
     this.data.clear()
+    if (showEmpty && isEmptyRegistered()) {
+      this.data.add(empty)
+    }
     doNotifyDataSetChanged()
   }
 
-  open fun appendData(data: List<Any>?) {
-    if (!data.isNullOrEmpty()) {
-      this.data.addAll(data)
-      doNotifyDataSetChanged()
-    }
+  open fun appendData(data: Collection<Any>?) {
+    if (data.isNullOrEmpty()) return
+    this.data.addAll(data)
+    doNotifyDataSetChanged()
   }
 
   /**
@@ -117,11 +183,13 @@ open class RecyclerAdapter : RecyclerView.Adapter<DataViewHolder<Any>>() {
    */
   open fun removeData(data: Any, showEmpty: Boolean = false) {
     if (this.data.isNullOrEmpty()) return
-    if (this.data.contains(data) && this.data.size == 1) {
-      if (showEmpty) {
-        updateData(Empty())
+    if (data is Collection<*>) {
+      removeData(data.filterNotNull(), showEmpty)
+    } else {
+      this.data.remove(data)
+      if (this.data.isNullOrEmpty() && showEmpty && isEmptyRegistered()) {
+        this.data.add(empty)
       }
-    } else if (this.data.remove(data)) {
       doNotifyDataSetChanged()
     }
   }
@@ -129,63 +197,107 @@ open class RecyclerAdapter : RecyclerView.Adapter<DataViewHolder<Any>>() {
   /**
    * Removing the data can cause the list to be empty and then display empty
    */
-  open fun removeData(data: List<Any>, showEmpty: Boolean = false) {
+  open fun removeData(data: Collection<Any>, showEmpty: Boolean = false) {
     if (this.data.isNullOrEmpty()) return
-    data.forEach {
-      this.data.remove(it)
+    this.data.removeAll(data)
+    if (this.data.isNullOrEmpty() && showEmpty && isEmptyRegistered()) {
+      this.data.add(empty)
     }
-    if (this.data.isNullOrEmpty()) {
-      if (showEmpty) {
-        if (viewHolder.indexOfKey(Empty::class.java.name.hashCode()) > -1) {
-          updateData(Empty())
-        }
-      }
-    } else {
-      doNotifyDataSetChanged()
-    }
+    doNotifyDataSetChanged()
   }
 
-  open fun appendData(index: Int, data: List<Any>?) {
-    if (!data.isNullOrEmpty()) {
-      this.data.addAll(index, data)
-      doNotifyDataSetChanged()
-    }
+  open fun appendData(index: Int, data: Collection<Any>?) {
+    if (data.isNullOrEmpty()) return
+    this.data.addAll(index, data)
+    doNotifyDataSetChanged()
   }
 
   open fun appendData(data: Any?) {
-    if (data != null) {
+    if (data == null) return
+    if (data is Collection<*>) {
+      appendData(data.filterNotNull())
+    } else {
       this.data.add(data)
       doNotifyDataSetChanged()
     }
   }
 
   open fun appendData(index: Int, data: Any?) {
-    if (data != null) {
+    if (data == null) return
+    if (data is Collection<*>) {
+      appendData(index, data.filterNotNull())
+    } else {
       this.data.add(index, data)
       doNotifyDataSetChanged()
     }
   }
 
-  open fun updateData(data: List<Any>?) {
-    this.data.clear()
-    if (data != null && data.isNotEmpty()) {
+  open fun updateData(data: Collection<Any>?) {
+    updateData(data, true)
+  }
+
+  /**
+   * @param data the data to be shown
+   * @param showEmpty Whether to display an empty view if the data is empty
+   */
+  open fun updateData(data: Collection<Any>?, showEmpty: Boolean) {
+    if (data.isNullOrEmpty()) {
+      if (showEmpty && isEmptyRegistered()) {
+        this.data.clear()
+        this.data.add(empty)
+        doNotifyDataSetChanged()
+      }
+    } else {
+      this.data.clear()
       this.data.addAll(data)
+      doNotifyDataSetChanged()
     }
-    doNotifyDataSetChanged()
   }
 
+  /**
+   * @param data the data to be shown
+   */
   open fun updateData(data: Any?) {
-    this.data.clear()
-    if (null != data) {
-      this.data.add(data)
-    }
-    doNotifyDataSetChanged()
+    updateData(data, true)
   }
 
+  /**
+   * @param data the data to be shown
+   * @param showEmpty Whether to display an empty view if the data is empty
+   */
+  open fun updateData(data: Any?, showEmpty: Boolean) {
+    if (data is Collection<*>) {
+      updateData(data.filterNotNull(), showEmpty)
+    } else {
+      if (data == null) {
+        if (showEmpty && isEmptyRegistered()) {
+          this.data.clear()
+          this.data.add(empty)
+          doNotifyDataSetChanged()
+        }
+      } else {
+        this.data.clear()
+        this.data.add(data)
+        doNotifyDataSetChanged()
+      }
+    }
+  }
+
+  /**
+   * @param data the data that has changed
+   *
+   * @see #notifyItemChanged(int)
+   */
   open fun notifyItemData(data: Any) {
-    val position = findDataPosition(data)
-    if (position >= 0) {
-      notifyItemChanged(position)
+    if (data is Collection<*>) {
+      data.filterNotNull().forEach {
+        notifyItemData(it)
+      }
+    } else {
+      val position = findDataPosition(data)
+      if (position >= 0) {
+        notifyItemChanged(position)
+      }
     }
   }
 

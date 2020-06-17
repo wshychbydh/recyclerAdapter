@@ -10,9 +10,7 @@ import androidx.annotation.NonNull
 import androidx.paging.PagedList
 import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DiffUtil
-import com.eye.cool.adapter.support.DataViewHolder
-import com.eye.cool.adapter.support.LayoutId
-import com.eye.cool.adapter.support.LayoutName
+import com.eye.cool.adapter.support.*
 
 /**
  *
@@ -32,10 +30,17 @@ open class StatePagingAdapter<T>(
   private var longClickObserver: View.OnLongClickListener? = null
 
   @Volatile
-  private var status: Any? = null
+  private var status: Any? = Loading()
 
   @Volatile
   private var dataCode: Int? = null
+
+  protected var empty: Any = Empty()
+
+  init {
+    registerStateViewHolder(Loading::class.java, DefaultLoadingViewHolder::class.java)
+    registerStateViewHolder(Empty::class.java, DefaultEmptyViewHolder::class.java)
+  }
 
   /**
    * @param status Any status you have registered for
@@ -46,13 +51,20 @@ open class StatePagingAdapter<T>(
       throw IllegalStateException("Class(${status.javaClass.simpleName}) is not registered!")
     }
     this.status = status
-    currentList?.clear()
     notifyDataSetChanged()
   }
 
   override fun submitList(pagedList: PagedList<T>?) {
-    status = null
-    super.submitList(pagedList)
+    submitList(pagedList, true)
+  }
+
+  fun submitList(pagedList: PagedList<T>?, showEmpty: Boolean) {
+    if (pagedList.isNullOrEmpty() && showEmpty) {
+      submitStatus(empty)
+    } else {
+      status = null
+      super.submitList(pagedList)
+    }
   }
 
   override fun getItem(position: Int): T? {
@@ -131,6 +143,17 @@ open class StatePagingAdapter<T>(
       viewHolder: Class<out DataViewHolder<*>>
   ) {
     registerViewHolder(cls, viewHolder, false)
+  }
+
+  /**
+   * Only used to register empty view, default Empty
+   *
+   * @param empty empty object
+   * @param clazz Empty view holder class
+   */
+  fun registerEmptyViewHolder(empty: Any = Empty(), clazz: Class<out DataViewHolder<*>>) {
+    viewHolders.put(empty.javaClass.name.hashCode(), clazz)
+    this.empty = empty
   }
 
   /**

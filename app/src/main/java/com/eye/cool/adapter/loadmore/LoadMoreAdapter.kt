@@ -5,8 +5,7 @@ import android.widget.CompoundButton
 import androidx.annotation.IntDef
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.eye.cool.adapter.support.DataViewHolder
-import com.eye.cool.adapter.support.RecyclerAdapter
+import com.eye.cool.adapter.support.*
 
 /**
  * Support for RecyclerView.LinearLayoutManager
@@ -15,29 +14,35 @@ import com.eye.cool.adapter.support.RecyclerAdapter
  */
 class LoadMoreAdapter : RecyclerAdapter {
 
-  @Deprecated("Use build instead.")
-  constructor()
+  private constructor()
 
   companion object {
     const val STATUS_NONE = 0
     const val STATUS_LOAD_MORE = 1
     const val STATUS_NO_MORE_DATA = 2
+    const val STATUS_SPEC = 3  //Any other status, such as loading, empty, etc.
   }
 
   @Retention(AnnotationRetention.RUNTIME)
-  @IntDef(STATUS_NONE, STATUS_LOAD_MORE, STATUS_NO_MORE_DATA)
+  @IntDef(STATUS_NONE, STATUS_LOAD_MORE, STATUS_NO_MORE_DATA, STATUS_SPEC)
   annotation class Status
 
   private var loadMoreListener: ILoadMoreListener? = null
-  private var noMoreData: Any? = NoMoreData()
-  private var loadMore: Any? = LoadMore()
+  private var noMoreData: Any = NoMoreData()
+  private var loadMore: Any = LoadMore()
   private var defaultCount = 10
   private var enableLoadMore = false
-  private var status = STATUS_LOAD_MORE
+  private var status = STATUS_SPEC
   private var showNoMoreStatusAlways = false
   private var showLoadMore = true
   private var showNoMoreData = true
   private var recyclerView: RecyclerView? = null
+
+  private val specData = hashSetOf(
+      Loading::class.java.name.hashCode(),
+      Empty::class.java.name.hashCode(),
+      Spec::class.java.name.hashCode()
+  )
 
   init {
     registerViewHolder(LoadMore::class.java, DefaultLoadMoreViewHolder::class.java)
@@ -59,58 +64,53 @@ class LoadMoreAdapter : RecyclerAdapter {
   override fun doNotifyDataSetChanged() {
     data.remove(loadMore)
     data.remove(noMoreData)
-    if (!showNoMoreStatusAlways && data.size < defaultCount) {
+    if (!showNoMoreStatusAlways && data.size < defaultCount && status != STATUS_SPEC) {
       status = STATUS_NONE
     }
     when (status) {
       STATUS_LOAD_MORE -> {
-        if (loadMore != null && showLoadMore) {
-          data.add(loadMore!!)
+        if (showLoadMore) {
+          data.add(loadMore)
         }
       }
       STATUS_NO_MORE_DATA -> {
-        if (noMoreData != null && showNoMoreData) {
-          data.add(noMoreData!!)
+        if (showNoMoreData) {
+          data.add(noMoreData)
         }
       }
     }
     super.doNotifyDataSetChanged()
   }
 
-  /**
-   * If the data is less than the maximum, whether the state is displayed，default false
-   */
-  @Deprecated("Use builder's showNoMoreData() instead.")
-  fun showStatusAlways(showStatusAlways: Boolean) {
-    this.showNoMoreStatusAlways = showStatusAlways
+  private fun registerSpecViewHolder(specDataClazz: Class<*>, clazz: Class<out DataViewHolder<*>>) {
+    super.registerViewHolder(specDataClazz, clazz)
+    specData.add(specDataClazz.name.hashCode())
   }
 
   /**
-   * 1.registerViewHolder(YourLoadMore::class.java, YourLoadingViewHolder::class.java)
-   * 2.setLoading(YourLoadMore::class.java)
-   * 3.If set to null, LoadMore will not be displayed
+   * Only used to replace empty view, default Empty
+   *
+   * @param empty empty object
+   * @param clazz Empty view holder class
    */
-  @Deprecated("Use build instead.")
-  fun setLoadMore(data: Any?) {
-    this.loadMore = data
+  @Deprecated("Use builder instead.")
+  override fun replaceEmptyViewHolder(empty: Any, clazz: Class<out DataViewHolder<*>>) {
+    super.replaceEmptyViewHolder(empty, clazz)
+    specData.remove(Empty::class.java.name.hashCode())
+    specData.add(empty.javaClass.name.hashCode())
   }
 
   /**
-   * 1.registerViewHolder(YourNoMoreData::class.java, YourNoMoreDataViewHolder::class.java)
-   * 2.setNoData(YourNoMoreData::class.java)
-   * 3.If set to null, NoMoreData will not be displayed
+   * Only used to replace loading view, default Loading
+   *
+   * @param loading loading object
+   * @param clazz Loading view holder class
    */
-  @Deprecated("Use build instead.")
-  fun setNoData(data: Any?) {
-    this.noMoreData = data
-  }
-
-  /**
-   * Maximum data per request
-   */
-  @Deprecated("Use build instead.")
-  fun setDefaultCount(defaultCount: Int) {
-    this.defaultCount = defaultCount
+  @Deprecated("Use builder instead.")
+  override fun replaceLoadingViewHolder(loading: Any, clazz: Class<out DataViewHolder<*>>) {
+    super.replaceLoadingViewHolder(loading, clazz)
+    specData.remove(Loading::class.java.name.hashCode())
+    specData.add(loading.javaClass.name.hashCode())
   }
 
   @Deprecated("Use A and B to automatically determine the status")
@@ -128,32 +128,97 @@ class LoadMoreAdapter : RecyclerAdapter {
     updateStatus(status)
   }
 
-  override fun updateData(data: List<Any>?) {
+  override fun updateData(data: Collection<Any>?) {
     val enableLoadMore = when {
-      data == null -> false
+      data.isNullOrEmpty() -> false
       this.data.containsAll(data) -> false
       else -> data.size >= defaultCount
     }
-    updateData(data, enableLoadMore)
+    updateData(data, true, enableLoadMore)
   }
 
-  fun updateData(data: List<Any>?, enableLoadMore: Boolean) {
-    updateStatus(enableLoadMore)
-    super.updateData(data)
-  }
-
-  override fun appendData(data: List<Any>?) {
+  override fun updateData(data: Collection<Any>?, showEmpty: Boolean) {
     val enableLoadMore = when {
-      data == null -> false
+      data.isNullOrEmpty() -> false
+      this.data.containsAll(data) -> false
+      else -> data.size >= defaultCount
+    }
+    updateData(data, showEmpty, enableLoadMore)
+  }
+
+  fun updateData(data: Collection<Any>?, showEmpty: Boolean, enableLoadMore: Boolean) {
+    if (data.isNullOrEmpty()) {
+      if (showEmpty && isEmptyRegistered()) {
+        this.data.clear()
+        this.data.add(empty)
+        status = STATUS_SPEC
+        this.enableLoadMore = false
+        doNotifyDataSetChanged()
+      } else {
+        enableLoadMore(enableLoadMore)
+      }
+    } else {
+      this.data.clear()
+      this.data.addAll(data)
+      updateStatus(enableLoadMore)
+      doNotifyDataSetChanged()
+    }
+  }
+
+  /**
+   * If updated data instance of Empty or Loading or another status you want, It is better to use {@link updateSpecData}.
+   *
+   * @param data Any data you want to update
+   */
+  override fun updateData(data: Any?) {
+    updateData(data, true)
+  }
+
+  override fun updateData(data: Any?, showEmpty: Boolean) {
+    if (data is Collection<*>) {
+      updateData(data.filterNotNull())
+    } else {
+      if (data != null && specData.contains(data.javaClass.name.hashCode())) {
+        status = STATUS_SPEC
+        enableLoadMore = false
+      }
+      super.updateData(data, showEmpty)
+    }
+  }
+
+  /**
+   * Do not call this method to update data {@link updateData}
+   *
+   * @param data Any state object that you have registered, such as loading, empty, etc.
+   */
+  fun updateSpecData(data: Any) {
+    specData.add(data.javaClass.name.hashCode())
+    status = STATUS_SPEC
+    enableLoadMore = false
+    super.updateData(data, false)
+  }
+
+  override fun appendData(data: Collection<Any>?) {
+    val enableLoadMore = when {
+      data.isNullOrEmpty() -> false
       data.size < defaultCount -> false
       else -> true
     }
     appendData(data, enableLoadMore)
   }
 
-  fun appendData(data: List<Any>?, enableLoadMore: Boolean) {
+  /**
+   * Overlay data on top of the original data
+   *
+   * @param data
+   * @param enableLoadMore
+   */
+  fun appendData(data: Collection<Any>?, enableLoadMore: Boolean) {
+    if (!data.isNullOrEmpty()) {
+      this.data.addAll(data)
+    }
     updateStatus(enableLoadMore)
-    super.appendData(data)
+    doNotifyDataSetChanged()
   }
 
   private fun updateStatus(enableLoadMore: Boolean) {
@@ -162,7 +227,10 @@ class LoadMoreAdapter : RecyclerAdapter {
       enableLoadMore -> {
         STATUS_LOAD_MORE
       }
-      itemCount >= defaultCount -> {
+      itemCount == 1 && (specData.contains(data[0].javaClass.name.hashCode())) -> {
+        STATUS_SPEC
+      }
+      itemCount >= defaultCount || (itemCount > 0 && showNoMoreStatusAlways) -> {
         STATUS_NO_MORE_DATA
       }
       else -> {
@@ -171,21 +239,15 @@ class LoadMoreAdapter : RecyclerAdapter {
     }
   }
 
+  /**
+   * At some case, you need to turn on load more ability, use it
+   *
+   * @param enable enable load more ability
+   */
   fun enableLoadMore(enable: Boolean) {
     if (enableLoadMore == enable) return
     updateStatus(enable)
     doNotifyDataSetChanged()
-  }
-
-  @Deprecated("Use build instead.")
-  fun setLoadMoreListener(listener: ILoadMoreListener) {
-    this.loadMoreListener = listener
-  }
-
-  @Deprecated("Use build instead.")
-  fun empowerLoadMoreAbility(recyclerView: RecyclerView) {
-    this.recyclerView = recyclerView
-    empowerLoadMoreAbility(true)
   }
 
   private fun empowerLoadMoreAbility(enable: Boolean) {
@@ -223,7 +285,6 @@ class LoadMoreAdapter : RecyclerAdapter {
     }
   }
 
-
   class Builder(recyclerView: RecyclerView) {
 
     private val adapter = LoadMoreAdapter()
@@ -236,26 +297,75 @@ class LoadMoreAdapter : RecyclerAdapter {
     }
 
     /**
-     * 1.registerViewHolder(YourLoadMore::class.java, YourLoadingViewHolder::class.java)
-     * 2.setLoading(YourLoadMore::class.java)
-     * 3.If set to null, LoadMore will not be displayed
+     * Register ViewHolder by dataClass, data is exclusive.
      *
-     * @param data Any data model associated with ViewHolder
+     * @param dataClazz Data Class
+     * @param clazz     ViewHolder Class
      */
-    fun setLoadMore(data: Any?): Builder {
-      adapter.loadMore = data
+    fun registerViewHolder(dataClazz: Class<*>, clazz: Class<out DataViewHolder<*>>): Builder {
+      adapter.registerViewHolder(dataClazz, clazz)
       return this
     }
 
     /**
-     * 1.registerViewHolder(YourNoMoreData::class.java, YourNoMoreDataViewHolder::class.java)
-     * 2.setNoData(YourNoMoreData::class.java)
-     * 3.If set to null, NoMoreData will not be displayed
+     * Only used to replace empty view, default Empty
+     *
+     * @param empty empty object
+     * @param clazz Empty view holder class
+     */
+    fun replaceEmptyViewHolder(empty: Any = Empty(), clazz: Class<out DataViewHolder<*>>): Builder {
+      adapter.replaceEmptyViewHolder(empty, clazz)
+      return this
+    }
+
+    /**
+     * Only used to replace loading view, default Loading
+     *
+     * @param loading loading object
+     * @param clazz Loading view holder class
+     */
+    fun replaceLoadingViewHolder(loading: Any = Loading(), clazz: Class<out DataViewHolder<*>>): Builder {
+      adapter.replaceLoadingViewHolder(loading, clazz)
+      return this
+    }
+
+    /**
+     * Register special data class. Normal data class use {@link registerViewHolder}
+     *
+     * A special data state that can only be displayed one at a time.
+     *
+     * @param specDataClazz Spec data class, such as Loading, etc
+     * @param clazz     ViewHolder Class
+     */
+    fun registerSpecViewHolder(specDataClazz: Class<*>, clazz: Class<out DataViewHolder<*>>) {
+      adapter.registerSpecViewHolder(specDataClazz, clazz)
+    }
+
+    /**
+     * Replace default load more view holder, If you don't want to show, @see #showLoadMore
+     *
+     * @param data Any data model associated with ViewHolder, If set to null, LoadMore will not be displayed
+     * @param clazz the clazz to replace {@link DefaultLoadMoreViewHolder}
+     */
+    fun replaceLoadMoreViewHolder(data: Any, clazz: Class<out DataViewHolder<*>>): Builder {
+      adapter.removeViewHolder(adapter.loadMore!!.javaClass)
+      adapter.removeViewHolder(LoadMore::class.java)
+      adapter.loadMore = data
+      adapter.registerViewHolder(data.javaClass, clazz)
+      return this
+    }
+
+    /**
+     * Replace default no more data view holder, If you don't want to show, @see #showNoMoreData
      *
      * @param data Any data model associated with ViewHolder
+     * @param clazz the clazz to replace {@link DefaultNoMoreDataViewHolder}
      */
-    fun setNoData(data: Any?): Builder {
+    fun replaceNoMoreDataViewHolder(data: Any, clazz: Class<out DataViewHolder<*>>): Builder {
+      adapter.removeViewHolder(adapter.noMoreData.javaClass)
+      adapter.removeViewHolder(NoMoreData::class.java)
       adapter.noMoreData = data
+      adapter.registerViewHolder(data.javaClass, clazz)
       return this
     }
 
@@ -275,17 +385,6 @@ class LoadMoreAdapter : RecyclerAdapter {
      */
     fun setLoadMoreListener(listener: ILoadMoreListener): Builder {
       adapter.loadMoreListener = listener
-      return this
-    }
-
-    /**
-     * Register ViewHolder by dataClass, data is exclusive.
-     *
-     * @param dataClazz Data Class
-     * @param clazz     ViewHolder Class
-     */
-    fun registerViewHolder(dataClazz: Class<*>, clazz: Class<out DataViewHolder<*>>): Builder {
-      adapter.registerViewHolder(dataClazz, clazz)
       return this
     }
 
@@ -343,12 +442,19 @@ class LoadMoreAdapter : RecyclerAdapter {
      * Display the appropriate view when no more data is available
      *
      * @param showNoMoreData default true
-     * @param showAlways If the data is less than the maximum,
-     * whether the no more data state is displayed, default false
      */
-    fun showNoMoreData(showNoMoreData: Boolean, showAlways: Boolean = false): Builder {
+    fun showNoMoreData(showNoMoreData: Boolean): Builder {
       adapter.showNoMoreData = showNoMoreData
-      adapter.showNoMoreStatusAlways = showAlways
+      return this
+    }
+
+    /**
+     * If the data is less than the maximum, whether the no more data state is displayed
+     *
+     * @param showNoMoreStatusAlways  default false
+     */
+    fun showNoMoreStatusAlways(showNoMoreStatusAlways: Boolean = false): Builder {
+      adapter.showNoMoreStatusAlways = showNoMoreStatusAlways
       return this
     }
 
