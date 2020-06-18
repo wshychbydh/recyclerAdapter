@@ -6,6 +6,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * Set the layout for DataViewHolder
+ *
  * Created by ycb on 16/4/18.
  */
 @Target(ElementType.TYPE)

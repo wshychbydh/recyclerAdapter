@@ -22,7 +22,7 @@ open class StatePagingAdapter<T>(
     @NonNull val diffCallback: DiffUtil.ItemCallback<T> = DefaultCallback()
 ) : PagedListAdapter<T, DataViewHolder<Any>>(diffCallback) {
 
-  private val viewHolders = SparseArray<Class<out DataViewHolder<*>>>()
+  private val viewHolder = SparseArray<Class<out DataViewHolder<*>>>()
 
   private var inflater: LayoutInflater? = null
   private var clickObserver: View.OnClickListener? = null
@@ -30,25 +30,24 @@ open class StatePagingAdapter<T>(
   private var longClickObserver: View.OnLongClickListener? = null
 
   @Volatile
-  private var status: Any? = Loading()
+  private var status: Any? = GlobalConfig.loading
 
   @Volatile
   private var dataCode: Int? = null
 
-  protected var empty: Any = Empty()
+  protected var empty: Any = GlobalConfig.empty
 
   init {
-    registerStateViewHolder(Loading::class.java, DefaultLoadingViewHolder::class.java)
-    registerStateViewHolder(Empty::class.java, DefaultEmptyViewHolder::class.java)
+    viewHolder.put(getHashCode(GlobalConfig.loading), GlobalConfig.loadingVh)
+    viewHolder.put(getHashCode(GlobalConfig.empty), GlobalConfig.emptyVh)
   }
 
   /**
    * @param status Any status you have registered for
    */
   fun submitStatus(status: Any) {
-    val hasCode = status.javaClass.simpleName.hashCode()
-    if (viewHolders.indexOfKey(hasCode) < 0) {
-      throw IllegalStateException("Class(${status.javaClass.simpleName}) is not registered!")
+    if (viewHolder.indexOfKey(getHashCode(status)) < 0) {
+      throw IllegalStateException("Class(${status.javaClass.name}) is not registered!")
     }
     this.status = status
     notifyDataSetChanged()
@@ -76,12 +75,19 @@ open class StatePagingAdapter<T>(
   }
 
   override fun getItemViewType(position: Int): Int {
-    return status?.javaClass?.simpleName?.hashCode() ?: dataCode
+    val statusHashCode: Int? = if (status == null) null else getHashCode(status!!)
+    return statusHashCode ?: dataCode
     ?: throw java.lang.IllegalStateException("The data's ViewHolder must be set")
   }
 
+  protected fun getHashCode(data: Any): Int {
+    return if (data is Class<*>) {
+      data.name.hashCode()
+    } else data.javaClass.name.hashCode()
+  }
+
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DataViewHolder<Any> {
-    val clazz = viewHolders.get(viewType)
+    val clazz = viewHolder.get(viewType)
         ?: throw IllegalArgumentException("You should call registerViewHolder() first !")
     var layoutId = clazz.getAnnotation(LayoutId::class.java)?.value
 
@@ -120,10 +126,10 @@ open class StatePagingAdapter<T>(
   }
 
   /**
-   * Register a data viewholder with data class, only one data viewholder can be registered.
+   * Register a data view-holder with data class, only one data view-holder can be registered.
    *
-   * @param cls data Class
-   * @param viewHolder     ViewHolder Class
+   * @param cls Data's class
+   * @param viewHolder Data's view-holder class
    */
   fun registerDataViewHolder(
       cls: Class<*>,
@@ -133,10 +139,10 @@ open class StatePagingAdapter<T>(
   }
 
   /**
-   * Register a state viewholder with state class.
+   * Register a state view-holder with state class.
    *
-   * @param cls data Class
-   * @param viewHolder     ViewHolder Class
+   * @param cls Any custom status
+   * @param viewHolder Status's view-holder class
    */
   fun registerStateViewHolder(
       cls: Class<*>,
@@ -146,38 +152,54 @@ open class StatePagingAdapter<T>(
   }
 
   /**
-   * Only used to register empty view, default Empty
+   * Only used to replace empty view, default Empty
    *
-   * @param empty empty object
-   * @param clazz Empty view holder class
+   * @param empty A instance or class. If it is class, it will call newInstance to generate the instance.
+   * @param clazz The clazz to replace {@link DefaultEmptyViewHolder}.
    */
-  fun registerEmptyViewHolder(empty: Any = Empty(), clazz: Class<out DataViewHolder<*>>) {
-    viewHolders.put(empty.javaClass.name.hashCode(), clazz)
-    this.empty = empty
+  fun replaceEmptyViewHolder(empty: Any, clazz: Class<out DataViewHolder<*>>) {
+    val replaceEmpty = if (empty is Class<*>) empty.newInstance() else empty
+    viewHolder.remove(getHashCode(this.empty))
+    viewHolder.put(getHashCode(replaceEmpty), clazz)
+    this.empty = replaceEmpty
+  }
+
+  /**
+   * Only used to replace default status view, default Loading
+   *
+   * @param status A instance or class. If it is class, it will call newInstance to generate the instance.
+   * @param clazz The clazz to replace {@link DefaultLoadingViewHolder}
+   */
+  fun replaceDefaultStatusViewHolder(status: Any, clazz: Class<out DataViewHolder<*>>) {
+    if (this.status != null) {
+      viewHolder.remove(getHashCode(this.status!!))
+    }
+    viewHolder.put(getHashCode(status), clazz)
+    this.status = if (status is Class<*>) status.newInstance() else status
   }
 
   /**
    * Register ViewHolder by dataClass, data is exclusive.
    *
-   * @param cls data Class
-   * @param viewHolder     ViewHolder Class
+   * @param cls Data's class
+   * @param viewHolder Data's view-holder class
    */
   fun registerViewHolder(
       cls: Class<*>,
       viewHolder: Class<out DataViewHolder<*>>,
       isDataHolder: Boolean
   ) {
-    val hashCode = cls.simpleName.hashCode()
+    val hashCode = cls.name.hashCode()
     if (isDataHolder) {
       if (this.dataCode != null) {
         if (dataCode != hashCode) {
-          throw IllegalStateException("The data's ViewHolder is already exists")
+          throw IllegalStateException("The data's view-holder is already exists")
         }
       } else {
         this.dataCode = hashCode
       }
     }
-    viewHolders.put(hashCode, viewHolder)
+    this.viewHolder.put(hashCode, viewHolder)
   }
 
   fun setOnClickListener(clickListener: View.OnClickListener) {

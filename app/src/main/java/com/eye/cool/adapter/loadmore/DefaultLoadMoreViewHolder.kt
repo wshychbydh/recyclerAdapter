@@ -12,6 +12,7 @@ class DefaultLoadMoreViewHolder(view: View) : DataViewHolder<LoadMore>(view) {
 
   override fun updateViewByData(data: LoadMore) {
     super.updateViewByData(data)
+
     if (!data.text.isNullOrEmpty()) {
       itemView.adapterLoadMoreTv.text = data.text
     }

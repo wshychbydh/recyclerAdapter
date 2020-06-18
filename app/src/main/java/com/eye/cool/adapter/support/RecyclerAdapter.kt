@@ -6,8 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.CompoundButton
 import androidx.annotation.CallSuper
-import androidx.annotation.UiThread
 import androidx.recyclerview.widget.RecyclerView
+import com.eye.cool.adapter.R
 import java.util.*
 
 /**
@@ -15,7 +15,7 @@ import java.util.*
  */
 open class RecyclerAdapter : RecyclerView.Adapter<DataViewHolder<Any>>() {
 
-  private val viewHolder = SparseArray<Class<out DataViewHolder<*>>>()
+  protected val viewHolder = SparseArray<Class<out DataViewHolder<*>>>()
   private var clickListener: View.OnClickListener? = null
   private var checkedListener: CompoundButton.OnCheckedChangeListener? = null
   private var longClickListener: View.OnLongClickListener? = null
@@ -23,12 +23,12 @@ open class RecyclerAdapter : RecyclerView.Adapter<DataViewHolder<Any>>() {
   private var inflater: LayoutInflater? = null
 
   protected val data = ArrayList<Any>()
-  protected var empty: Any = Empty()
-  protected var loading: Any = Loading()
+  protected var empty: Any = GlobalConfig.empty
+  protected var loading: Any = GlobalConfig.loading
 
   init {
-    registerViewHolder(Loading::class.java, DefaultLoadingViewHolder::class.java)
-    registerViewHolder(Empty::class.java, DefaultEmptyViewHolder::class.java)
+    viewHolder.put(getHashCode(loading), GlobalConfig.loadingVh)
+    viewHolder.put(getHashCode(empty), GlobalConfig.emptyVh)
   }
 
   override fun getItemCount(): Int {
@@ -36,7 +36,13 @@ open class RecyclerAdapter : RecyclerView.Adapter<DataViewHolder<Any>>() {
   }
 
   override fun getItemViewType(position: Int): Int {
-    return data[position].javaClass.name.hashCode()
+    return getHashCode(data[position])
+  }
+
+  protected fun getHashCode(data: Any): Int {
+    return if (data is Class<*>) {
+      data.name.hashCode()
+    } else data.javaClass.name.hashCode()
   }
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DataViewHolder<Any> {
@@ -77,42 +83,49 @@ open class RecyclerAdapter : RecyclerView.Adapter<DataViewHolder<Any>>() {
   /**
    * Register ViewHolder by dataClass, data is exclusive.
    *
-   * @param dataClazz Data Class
-   * @param clazz     ViewHolder Class
+   * @param dataClazz Data's class
+   * @param clazz    Data's view-holder class
    */
   fun registerViewHolder(dataClazz: Class<*>, clazz: Class<out DataViewHolder<*>>) {
     viewHolder.put(dataClazz.name.hashCode(), clazz)
   }
 
   /**
-   * Remove registered view holder by class
+   * Remove registered view-holder
    *
-   * @param dataClazz The class's view holder will be removed
+   * @param data The data's view-holder will be removed
    */
-  fun removeViewHolder(dataClazz: Class<*>) {
-    viewHolder.remove(dataClazz.name.hashCode())
+  fun removeViewHolder(data: Any) {
+    viewHolder.remove(getHashCode(data))
+  }
+
+
+  /**
+   * Only used to replace empty view, default Empty()
+   *
+   * @param empty A instance or class. If it is class, it will call newInstance to generate the instance
+   * @param clazz The clazz to replace {@link DefaultEmptyViewHolder}
+   */
+  @Throws(InstantiationException::class, IllegalAccessException::class)
+  open fun replaceEmptyViewHolder(empty: Any, clazz: Class<out DataViewHolder<*>>) {
+    val replaceEmpty = if (empty is Class<*>) empty.newInstance() else empty
+    viewHolder.remove(getHashCode(this.empty))
+    viewHolder.put(getHashCode(replaceEmpty), clazz)
+    this.empty = replaceEmpty
   }
 
   /**
-   * Only used to replace empty view, default Empty
+   * Only used to replace loading view, default Loading()
    *
-   * @param empty empty object
-   * @param clazz Empty view holder class
+   * @param loading A instance or class. If it is class, it will call newInstance to generate the instance
+   * @param clazz The clazz to replace {@link DefaultLoadingViewHolder}
    */
-  open fun replaceEmptyViewHolder(empty: Any = Empty(), clazz: Class<out DataViewHolder<*>>) {
-    viewHolder.put(empty.javaClass.name.hashCode(), clazz)
-    this.empty = empty
-  }
-
-  /**
-   * Only used to replace loading view, default Loading
-   *
-   * @param loading loading object
-   * @param clazz Loading view holder class
-   */
-  open fun replaceLoadingViewHolder(loading: Any = Loading(), clazz: Class<out DataViewHolder<*>>) {
-    viewHolder.put(loading.javaClass.name.hashCode(), clazz)
-    this.loading = loading
+  @Throws(InstantiationException::class, IllegalAccessException::class)
+  open fun replaceLoadingViewHolder(loading: Any, clazz: Class<out DataViewHolder<*>>) {
+    val replaceLoading = if (loading is Class<*>) loading.newInstance() else loading
+    viewHolder.remove(getHashCode(this.loading))
+    viewHolder.put(getHashCode(replaceLoading), clazz)
+    this.loading = replaceLoading
   }
 
   /**
@@ -140,11 +153,15 @@ open class RecyclerAdapter : RecyclerView.Adapter<DataViewHolder<Any>>() {
   }
 
   protected fun isEmptyRegistered(): Boolean {
-    return viewHolder.indexOfKey(empty.javaClass.name.hashCode()) > -1
+    return viewHolder.indexOfKey(getHashCode(empty)) > -1
   }
 
-  open fun loading() {
-    if (viewHolder.indexOfKey(loading.javaClass.name.hashCode()) > -1) {
+  protected fun isLoadingRegistered(): Boolean {
+    return viewHolder.indexOfKey(getHashCode(loading)) > -1
+  }
+
+  open fun showLoading() {
+    if (isLoadingRegistered()) {
       this.data.clear()
       this.data.add(loading)
       doNotifyDataSetChanged()
@@ -318,5 +335,16 @@ open class RecyclerAdapter : RecyclerView.Adapter<DataViewHolder<Any>>() {
     return if (data.isEmpty()) {
       null
     } else data[data.size - 1]
+  }
+
+  /**
+   * To determine if the Empty View has been clicked
+   *
+   * {@link Empty#isClickAble}
+   *
+   * @param v The clicked view. {@View.OnClickListener}
+   */
+  fun isEmptyClicked(v: View?): Boolean {
+    return v?.id == R.id.adapterEmptyLayout
   }
 }

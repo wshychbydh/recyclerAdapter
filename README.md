@@ -13,6 +13,8 @@
 
 5、支持Paging
 
+6、支持全局参数配置
+
 #### 使用方法：
 
 1、在root目录的build.gradle目录中添加
@@ -28,7 +30,7 @@
 2、在项目的build.gradle中添加依赖
 ```
     dependencies {
-        implementation 'com.github.wshychbydh:recyclerAdapter:1.1.7'
+        implementation 'com.github.wshychbydh:recyclerAdapter:1.2.0'
     }
 ```
 
@@ -133,6 +135,19 @@
     adapter.submitStatus(status)  //提交状态，如加载中，空显示，异常等注册过的状态
     adapter.submitList(data)      //提交数据
     adapter.submitList(data, showEmpty)     //提交数据，当数据为空时显示空视图
+```
+
+7、全局参数配置：（页面的配置优先级高于全局配置）
+```
+    GlobalConfig
+       .setDefaultCount(10)             //默认一次加载的数据数量，默认10
+       .showLoadMore(true)              //支持加载更多，默认true
+       .showNoMoreData(true)            //无更多数据时，显示对应视图，默认true
+       .showNoMoreStatusAlways(false)   //数据量小于PageSize时，是否显示NoMoreData，默认false
+       .setDefaultEmpty(YourEmpty, YourEmptyViewHolder::class.java)                //替换Empty
+       .setDefaultLoading(YourLoading, YourLoadingViewHolder::class.java)          //替换Loading
+       .setDefaultLoadMore(YourLoadMore, YourLoadMoreViewHolder::class.java)       //替换LoadMore
+       .setDefaultNoMoreData(YourNoMoreData, YourNoMoreDataViewHolder::class.java) //替换NoMoreData
 ```
 
 #####   

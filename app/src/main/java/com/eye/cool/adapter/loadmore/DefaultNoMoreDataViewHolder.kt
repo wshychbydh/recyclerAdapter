@@ -10,6 +10,7 @@ class DefaultNoMoreDataViewHolder(view: View) : DataViewHolder<NoMoreData>(view)
 
   override fun updateViewByData(data: NoMoreData) {
     super.updateViewByData(data)
+
     if (!data.text.isNullOrEmpty()) {
       itemView.noMoreDataTv.text = data.text
     }
