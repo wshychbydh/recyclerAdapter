@@ -165,7 +165,7 @@ open class RecyclerAdapter : RecyclerView.Adapter<DataViewHolder<Any>>() {
   }
 
   fun showLoading(loading: Any) {
-    if (isLoadingRegistered()) {
+    if (viewHolder.indexOfKey(getHashCode(loading)) > -1) {
       this.loading = loading
       this.data.clear()
       this.data.add(loading)
@@ -178,7 +178,7 @@ open class RecyclerAdapter : RecyclerView.Adapter<DataViewHolder<Any>>() {
   }
 
   fun showEmpty(empty: Any) {
-    if (isEmptyRegistered()) {
+    if (viewHolder.indexOfKey(getHashCode(empty)) > -1) {
       this.empty = empty
       this.data.clear()
       this.data.add(empty)
@@ -261,6 +261,25 @@ open class RecyclerAdapter : RecyclerView.Adapter<DataViewHolder<Any>>() {
 
   open fun updateData(data: Collection<Any>?) {
     updateData(data, true)
+  }
+
+  /**
+   * @param data the data to be shown
+   * @param empty Whether to display the empty view if the data is empty
+   */
+  open fun updateData(data: Collection<Any>?, empty: Any) {
+    if (data.isNullOrEmpty()) {
+      if (viewHolder.indexOfKey(getHashCode(empty)) > -1) {
+        this.empty = empty
+        this.data.clear()
+        this.data.add(empty)
+        doNotifyDataSetChanged()
+      }
+    } else {
+      this.data.clear()
+      this.data.addAll(data)
+      doNotifyDataSetChanged()
+    }
   }
 
   /**

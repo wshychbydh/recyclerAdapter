@@ -6,8 +6,8 @@ import androidx.annotation.IntDef
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.eye.cool.adapter.support.DataViewHolder
-import com.eye.cool.adapter.support.RecyclerAdapter
 import com.eye.cool.adapter.support.GlobalConfig
+import com.eye.cool.adapter.support.RecyclerAdapter
 
 /**
  * Support for RecyclerView.LinearLayoutManager
@@ -117,7 +117,18 @@ class LoadMoreAdapter : RecyclerAdapter {
     specData.add(getHashCode(replaceLoading))
   }
 
-  @Deprecated("Use A and B to automatically determine the status")
+  /**
+   * Resets the status of the list display if nothing to be loaded.
+   */
+  fun onLoadMoreCompleted() {
+    updateStatus(STATUS_NONE)
+  }
+
+  /**
+   * Update the status of the list
+   *
+   * @param status must be one of {STATUS_NONE, STATUS_LOAD_MORE, STATUS_NO_MORE_DATA, STATUS_SPEC}
+   */
   fun updateStatus(@Status status: Int) {
     if (this.status == status) return
     this.status = status

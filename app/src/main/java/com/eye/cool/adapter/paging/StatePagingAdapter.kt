@@ -10,7 +10,10 @@ import androidx.annotation.NonNull
 import androidx.paging.PagedList
 import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DiffUtil
-import com.eye.cool.adapter.support.*
+import com.eye.cool.adapter.support.DataViewHolder
+import com.eye.cool.adapter.support.GlobalConfig
+import com.eye.cool.adapter.support.LayoutId
+import com.eye.cool.adapter.support.LayoutName
 
 /**
  *
@@ -57,8 +60,18 @@ open class StatePagingAdapter<T>(
     submitList(pagedList, true)
   }
 
+  fun submitList(pagedList: PagedList<T>?, empty: Any) {
+    if (pagedList.isNullOrEmpty() && viewHolder.indexOfKey(getHashCode(empty)) > -1) {
+      this.empty = empty
+      submitStatus(empty)
+    } else {
+      status = null
+      super.submitList(pagedList)
+    }
+  }
+
   fun submitList(pagedList: PagedList<T>?, showEmpty: Boolean) {
-    if (pagedList.isNullOrEmpty() && showEmpty) {
+    if (pagedList.isNullOrEmpty() && showEmpty && isEmptyRegistered()) {
       submitStatus(empty)
     } else {
       status = null
@@ -123,6 +136,10 @@ open class StatePagingAdapter<T>(
     holder.dataSize = itemCount
     val data = if (status == null) getItem(position) else status
     holder.updateViewByData(data ?: return)
+  }
+
+  protected fun isEmptyRegistered(): Boolean {
+    return viewHolder.indexOfKey(getHashCode(empty)) > -1
   }
 
   /**

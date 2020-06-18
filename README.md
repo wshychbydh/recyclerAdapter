@@ -30,7 +30,7 @@
 2、在项目的build.gradle中添加依赖
 ```
     dependencies {
-        implementation 'com.github.wshychbydh:recyclerAdapter:1.2.0'
+        implementation 'com.github.wshychbydh:recyclerAdapter:1.2.1'
     }
 ```
 
@@ -71,6 +71,7 @@
 
     adapter.appendData(data)  //叠加数据 
     adapter.updateData(data)  //更新数据
+    adapter.appendData(data, empty)      //更新数据，当数据为空时显示动态的空视图（需先注册）
     adapter.updateData(data, showEmpty)  //更新数据, 当数据为空时是否展示空视图
     adapter.notifyItemData(data)  //更新某一栏的数据 
     adapter.clearData()       //清空数据 
@@ -120,8 +121,12 @@
      
     adapter.updateData(data)  //叠加数据
     adapter.appendData(data)  //更新数据
+    adapter.appendData(data, empty)      //更新数据，当数据为空时显示动态的空视图（需先注册）
     adapter.appendData(data, showEmpty)  //更新数据，当数据为空时显示空视图
     adapter.appendData(data, showEmpty, enableLoadMore)  //更新数据，并开启或禁用LoadMore能力
+
+    //当加载更多且未获取到任何数据时，若需重置列表状态
+    adapter.onLoadMoreCompleted()
 
 ```
 
