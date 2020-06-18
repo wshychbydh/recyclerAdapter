@@ -160,16 +160,26 @@ open class RecyclerAdapter : RecyclerView.Adapter<DataViewHolder<Any>>() {
     return viewHolder.indexOfKey(getHashCode(loading)) > -1
   }
 
-  open fun showLoading() {
+  fun showLoading() {
+    showLoading(loading)
+  }
+
+  fun showLoading(loading: Any) {
     if (isLoadingRegistered()) {
+      this.loading = loading
       this.data.clear()
       this.data.add(loading)
       doNotifyDataSetChanged()
     }
   }
 
-  open fun showEmpty() {
+  fun showEmpty() {
+    showEmpty(empty)
+  }
+
+  fun showEmpty(empty: Any) {
     if (isEmptyRegistered()) {
+      this.empty = empty
       this.data.clear()
       this.data.add(empty)
       doNotifyDataSetChanged()
