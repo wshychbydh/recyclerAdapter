@@ -20,7 +20,6 @@ open class RecyclerAdapter : RecyclerView.Adapter<DataViewHolder<Any>>() {
   private var checkedListener: CompoundButton.OnCheckedChangeListener? = null
   private var longClickListener: View.OnLongClickListener? = null
   private var globalDataObserver: ((key: Any?) -> Any)? = null
-  private var inflater: LayoutInflater? = null
 
   protected val data = ArrayList<Any>()
   protected var empty: Any = GlobalConfig.empty
@@ -59,12 +58,8 @@ open class RecyclerAdapter : RecyclerView.Adapter<DataViewHolder<Any>>() {
 
     require(!(layoutId == null || layoutId == 0)) { clazz.simpleName + " must be has @LayoutId or @LayoutName annotation" }
 
-    if (inflater == null) {
-      inflater = LayoutInflater.from(parent.context.applicationContext)
-    }
-
     try {
-      val itemView = inflater!!.inflate(layoutId, parent, false)
+      val itemView = LayoutInflater.from(parent.context)!!.inflate(layoutId, parent, false)
       return clazz.getConstructor(View::class.java).newInstance(itemView) as DataViewHolder<Any>
     } catch (e: Exception) {
       throw RuntimeException(e)
