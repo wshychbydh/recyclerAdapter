@@ -43,7 +43,7 @@ class DefaultDataSourceFactory<T>(
     }
   }
 
-  interface IDataLoader<T> {
+  fun interface IDataLoader<T> {
     fun loadData(page: Int, pageSize: Int): List<T>?
   }
 }
